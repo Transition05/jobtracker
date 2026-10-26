@@ -1,4 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Skills"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#1E6B62"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
+<script>window.APP_VERSION="1792979486";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
 <title>Job Skills Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
@@ -484,6 +485,10 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
       <input type="file" id="restoreFile" accept=".json,application/json" hidden>
     </div>
     <div class="msg" id="dmsg" aria-live="polite"></div>
+    <div id="verBox" hidden>
+      <div class="lbl" style="margin-top:30px">Tracker version</div>
+      <div class="row" style="margin-top:0"><span id="verLine"></span><button type="button" class="btn ghost sm" id="chkUpd">Check for update</button><span class="msg" id="umsg" aria-live="polite" style="margin:0"></span></div>
+    </div>
     <textarea id="clip" aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px"></textarea>
   </section>
 </div>
@@ -1716,6 +1721,24 @@ $("restoreFile").addEventListener("change",ev=>{
   r.readAsText(f); ev.target.value="";
 });
 
+/* ================= app version (iPad version only) ================= */
+(function(){
+  if(!window.APP_VERSION) return;
+  const v=new Date(+window.APP_VERSION*1000);
+  $("verBox").hidden=false;
+  $("verLine").textContent="Installed: "+v.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})+", "+v.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+  try{ if(sessionStorage.getItem("jst.updated")){ sessionStorage.removeItem("jst.updated"); setTimeout(()=>{ $("storeWarn").hidden=false; $("storeWarn").textContent="The tracker was updated to the newest version. Your students and entries are unchanged."; setTimeout(()=>{ $("storeWarn").hidden=true; },6000); },300); } }catch(e){}
+  $("chkUpd").onclick=async()=>{
+    $("umsg").textContent="Checking…";
+    if(navigator.onLine===false){ $("umsg").textContent="You're offline. Connect to Wi-Fi and try again."; return; }
+    try{ const r=window.__swReg||(await navigator.serviceWorker.getRegistration()); if(r) await r.update(); }catch(e){}
+    try{ const res=await fetch("index.html?check="+Date.now(),{cache:"no-store"}); const txt=await res.text(); const m=txt.match(/APP_VERSION="(\d+)"/);
+      if(m&&m[1]!==String(window.APP_VERSION)){ $("umsg").textContent="Updating…"; setTimeout(()=>location.reload(),1500); }
+      else $("umsg").textContent="You have the newest version.";
+    }catch(e){ $("umsg").textContent="Couldn't reach the website. Try again on Wi-Fi."; }
+  };
+})();
+
 /* ================= start ================= */
 function startLocal(){ mode="local"; try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){} loadLocal(); ready=true; renderAll(); setView("log"); }
 if(!inClaude) startLocal();
@@ -1739,5 +1762,4 @@ else {
 }
 </script>
 
-<script>if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){navigator.serviceWorker.register("sw.js").catch(function(){});}</script>
 </body></html>
