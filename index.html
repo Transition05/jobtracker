@@ -220,7 +220,7 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .gbox{margin-top:18px; background:var(--soft); border-radius:18px; padding:14px}
 .ghead{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; justify-content:space-between}
 .ghead h2{font-family:var(--display); font-weight:600; font-size:22px; margin:0}
-.gcards{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; margin-top:10px}
+.gcards{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr)); gap:10px; margin-top:10px}
 .gcard{background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; min-width:0}
 .gcard.live{border-color:var(--pV)}
 .gcard header{display:flex; flex-wrap:wrap; gap:6px; align-items:baseline}
@@ -239,6 +239,10 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .gclk{font-family:var(--display); font-weight:800; font-size:22px; min-width:64px; font-variant-numeric:tabular-nums}
 .gsel{height:38px; border:2px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:inherit; font-size:14px; flex:1; min-width:0}
 .gnote{min-height:40px; width:100%; border:2px solid var(--line); border-radius:10px; padding:6px 8px; font:inherit; font-size:14px; background:var(--panel); color:var(--ink); resize:vertical}
+.gpair{display:inline-flex}
+.gcard .gpair button:first-child{border-radius:10px 0 0 10px}
+.gcard .gpair .gm{border-radius:0 10px 10px 0; border-left:0; background:var(--soft); min-width:36px; padding:0; font-size:18px}
+.gcard .gpair .gm:disabled{opacity:.35}
 .gcard footer{display:flex; flex-wrap:wrap; gap:6px; justify-content:space-between}
 .gcard footer button{border:0; background:none; text-decoration:underline; color:var(--mut); font-weight:400; padding:4px 2px; min-height:0}
 .gcard footer .more{color:var(--accent); font-weight:700}
@@ -266,6 +270,12 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
 .sw .lbl2{min-width:120px; font-weight:700}
 .otbtns{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 .otbtns .big{min-width:130px; padding:14px 18px; border-radius:14px; border:2px solid var(--line); background:var(--panel); font-weight:700; font-size:17px}
+.otc{display:flex; align-items:stretch; border:2px solid var(--line); border-radius:14px; overflow:hidden; background:var(--panel)}
+.otc .big{border:0; border-radius:0; display:flex; gap:12px; align-items:center}
+.otc .big b{font-family:var(--display); font-size:22px; font-variant-numeric:tabular-nums}
+.otc .m{border:0; background:var(--soft); width:52px; font-size:24px; font-weight:700}
+.otc .m:disabled{opacity:.35}
+.otc.on.has{border-color:var(--pI)} .otc.off.has{border-color:var(--pP)}
 .otbtns .due{border-color:var(--hi); box-shadow:0 0 0 4px var(--hi)}
 @media (prefers-reduced-motion:no-preference){ .otbtns .due{animation:otpulse 1s ease-in-out infinite} }
 @keyframes otpulse{50%{box-shadow:0 0 0 1px var(--hi)}}
@@ -1044,7 +1054,7 @@ function renderGroup(){
       <div class="grow"><span class="gl">Help</span><select class="gsel" data-gassist="1" aria-label="Assistance level for ${esc(s.name)}"><option value="">Assistance level…</option>${ASSIST.map(([k,nm])=>`<option value="${k}"${X.assist===k?" selected":""}>${nm}</option>`).join("")}</select></div>
       <div class="grow"><span class="gl">Prompts</span>${PROMPTS.map(([k,nm])=>`<button type="button" class="gpb${X.prompts[k]?" on":""}" data-gp="${k}" aria-label="${nm} prompt for ${esc(s.name)}">${k}<small>${X.prompts[k]||0}</small></button>`).join("")}</div>
       <div class="grow"><span class="gl">Trials</span><button type="button" data-gct="1">✓ Correct</button><button type="button" data-gct="0">✗ Missed</button><span class="gnum">${X.touched.has("ct")?`${X.c}/${X.t}`:""}</span></div>
-      <div class="grow"><span class="gl">On task</span><button type="button" data-got="on">✓ On</button><button type="button" data-got="off">✗ Off</button><span class="gnum">${a?Math.round(X.ot.on/a*100)+"%":""}</span></div>
+      <div class="grow"><span class="gl">On task</span>${["on","off"].map(k=>`<span class="gpair"><button type="button" data-got="${k}">${k==="on"?"✓ On":"✗ Off"} <b>${X.ot[k]}</b></button><button type="button" class="gm" data-gotm="${k}" aria-label="Take away one ${k==="on"?"on task":"off task"} for ${esc(s.name)}"${X.ot[k]?"":" disabled"}>−</button></span>`).join("")}<span class="gnum">${a?Math.round(X.ot.on/a*100)+"%":""}</span></div>
       <div class="grow"><span class="gl">Behavior</span>${behList().map(bn=>`<button type="button" class="gbb${X.beh[bn]?" on":""}" data-gb="${esc(bn)}">${esc(bn)}<b>${X.beh[bn]||""}</b></button>`).join("")}</div>
       <div class="grow"><span class="gl">Timer</span><span class="gclk" data-gclk="${esc(sid)}">${mmss(secs)}</span><button type="button" data-gsw="1">${run?"Pause":secs?"Resume":"Start"}</button></div>
       <textarea class="gnote" data-gnote="1" placeholder="Quick note" aria-label="Quick note for ${esc(s.name)}">${esc(X.note||"")}</textarea>
@@ -1059,6 +1069,7 @@ document.addEventListener("click",ev=>{
   if(d.gp){ X.prompts[d.gp]=(X.prompts[d.gp]||0)+1; X.hist.push(["p",d.gp]); }
   else if(d.gct!==undefined){ if(!X.touched.has("ct")){ X.c=0; X.t=0; } X.types.add("ct"); X.touched.add("ct"); X.t++; if(d.gct==="1") X.c++; X.hist.push(["ct",d.gct]); }
   else if(d.got){ X.ot[d.got]++; X.hist.push(["ot",d.got]); }
+  else if(d.gotm){ X.ot[d.gotm]=Math.max(0,X.ot[d.gotm]-1); }
   else if(d.gb){ X.beh[d.gb]=(X.beh[d.gb]||0)+1; X.hist.push(["b",d.gb]); }
   else if(d.gsw){ const t=X.tm.task; if(t.st){ t.acc+=(Date.now()-t.st)/1000; t.st=null; } else t.st=Date.now(); }
   else if(d.gundo){ const h=X.hist.pop(); if(!h) return;
@@ -1308,9 +1319,8 @@ function renderMore(){
   const on=F.ot.on, all=F.ot.on+F.ot.off;
   $("behBox").innerHTML=`<h4>Tap each time it happens</h4>${counterGrid(behList(),F.beh,"b",F.editBeh)}
     <h4>On-task check</h4>
-    <div class="otbtns"><button type="button" class="big${F.otDue?" due":""}" data-otc="on">✓ On task</button><button type="button" class="big${F.otDue?" due":""}" data-otc="off">✗ Off task</button>
-      <span class="ptotal" style="margin:0">${all?`On ${on} · Off ${F.ot.off} · <b>${Math.round(on/all*100)}% on task</b>`:"No checks yet"}</span>
-      ${all?`<button type="button" class="link" data-otundo="1">Undo last</button>`:""}</div>
+    <div class="otbtns">${["on","off"].map(k=>`<div class="otc ${k}${F.ot[k]?" has":""}${F.otDue?" due":""}"><button type="button" class="big" data-otc="${k}">${k==="on"?"✓ On task":"✗ Off task"}<b>${F.ot[k]}</b></button><button type="button" class="m" data-otm="${k}" aria-label="Take away one ${k==="on"?"on task":"off task"}"${F.ot[k]?"":" disabled"}>−</button></div>`).join("")}
+      <span class="ptotal" style="margin:0">${all?`<b>${Math.round(on/all*100)}% on task</b> (${all} check${all>1?"s":""})`:"No checks yet"}</span></div>
     <div class="fields"><label>Remind me to check<select class="txt" id="otEvery" style="max-width:200px">${[0,1,2,3,5].map(m=>`<option value="${m}"${ui.otEvery===m?" selected":""}>${m?`Every ${m} minute${m>1?"s":""}`:"No reminder"}</option>`).join("")}</select></label>
       <span class="sub" id="otNextTxt" style="font-size:14px"></span></div>
     <h4>Engagement</h4>
@@ -1436,7 +1446,7 @@ document.addEventListener("click",async ev=>{
   else if(d.brm||d.erm){ const key=d.brm?"behaviors":"errors", name=d.brm||d.erm, cur=d.brm?behList():errList();
     if(!arm(b,"✕","Sure?")) return; M.lists={...M.lists,[key]:cur.filter(x=>x!==name)}; await guarded(saveLists,"Couldn't change the list."); renderMore(); }
   else if(d.otc){ F.ot[d.otc]++; F.ot.last=d.otc; F.otDue=false; if(ui.otEvery) F.otNext=Date.now()+ui.otEvery*60000; renderMore(); updSave(); }
-  else if(d.otundo){ if(F.ot.last&&F.ot[F.ot.last]>0) F.ot[F.ot.last]--; F.ot.last=null; renderMore(); updSave(); }
+  else if(d.otm){ F.ot[d.otm]=Math.max(0,F.ot[d.otm]-1); renderMore(); updSave(); }
   else if(d.eng){ F.engage=F.engage===+d.eng?0:+d.eng; renderMore(); updSave(); }
   else if(d.sw){ const t=F.tm[d.sw]; if(t.st){ t.acc+= (Date.now()-t.st)/1000; t.st=null; } else t.st=Date.now(); renderMore(); updSave(); }
   else if(d.swr){ F.tm[d.swr]={acc:0,st:null}; renderMore(); updSave(); }
