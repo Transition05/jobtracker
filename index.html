@@ -214,6 +214,45 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.moresec h3 .opt{font-size:14px}
+details.more{border:2px solid var(--line); border-radius:14px; background:var(--panel); margin-top:10px}
+details.more>summary{list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; font-size:18px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::after{content:"+"; margin-left:auto; font-size:22px; color:var(--accent); font-weight:800}
+details.more[open]>summary::after{content:"−"}
+details.more>summary small{font-family:var(--body); font-weight:400; font-size:14px; color:var(--mut); overflow-wrap:anywhere; min-width:0}
+.mbody{padding:0 14px 14px; display:flex; flex-direction:column; gap:12px}
+.mbody h4{margin:6px 0 0; font-size:13px; text-transform:uppercase; letter-spacing:.07em; color:var(--mut)}
+.ctrs{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px}
+.ctr2{border:2px solid var(--line); border-radius:12px; display:flex; align-items:stretch; overflow:hidden; background:var(--panel); min-width:0}
+.ctr2 .lab{flex:1; padding:10px; text-align:left; border:0; background:none; font-weight:700; min-width:0; overflow-wrap:anywhere}
+.ctr2 .n{min-width:36px; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:20px; font-variant-numeric:tabular-nums}
+.ctr2 .m{border:0; background:var(--soft); width:40px; font-size:20px; font-weight:700}
+.ctr2.on{border-color:var(--pV)}
+.ctr2 .rm{border:0; background:var(--pP); color:#fff; width:40px; font-weight:700}
+.sw{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.sw .clock{font-family:var(--display); font-weight:800; font-size:30px; font-variant-numeric:tabular-nums; min-width:100px}
+.sw .lbl2{min-width:120px; font-weight:700}
+.otbtns{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.otbtns .big{min-width:130px; padding:14px 18px; border-radius:14px; border:2px solid var(--line); background:var(--panel); font-weight:700; font-size:17px}
+.otbtns .due{border-color:var(--hi); box-shadow:0 0 0 4px var(--hi)}
+@media (prefers-reduced-motion:no-preference){ .otbtns .due{animation:otpulse 1s ease-in-out infinite} }
+@keyframes otpulse{50%{box-shadow:0 0 0 1px var(--hi)}}
+.fields{display:flex; flex-wrap:wrap; gap:12px 18px; align-items:end}
+.fields label{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700; color:var(--mut)}
+.fields .txt{flex:none; height:44px}
+.numin{width:96px; height:44px; text-align:center; font-size:18px; border:2px solid var(--line); border-radius:12px; background:var(--panel); color:var(--ink); font-variant-numeric:tabular-nums}
+.abc{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px}
+.abc textarea{min-height:64px}
+@media (max-width:620px){ .abc{grid-template-columns:1fr} }
+.steprow2{display:flex; flex-wrap:wrap; gap:8px; align-items:center; border:2px solid var(--line); border-radius:12px; padding:8px 10px; background:var(--panel)}
+.steprow2 .t{flex:1 1 150px; min-width:0; overflow-wrap:anywhere; font-weight:700}
+.stepp{display:flex; gap:4px; flex-wrap:wrap}
+.stepp button{width:38px; height:38px; border-radius:9px; border:2px solid var(--line); background:var(--panel); font-weight:800}
+.stepp button[aria-pressed="true"]{color:#fff; border-color:transparent}
+.stepp button[data-sp="I"][aria-pressed="true"]{background:var(--pI)} .stepp button[data-sp="G"][aria-pressed="true"]{background:var(--pG)}
+.stepp button[data-sp="V"][aria-pressed="true"]{background:var(--pV)} .stepp button[data-sp="M"][aria-pressed="true"]{background:var(--pM)}
+.stepp button[data-sp="P"][aria-pressed="true"]{background:var(--pP)} .stepp button[data-sp="X"][aria-pressed="true"]{background:var(--mut)}
 .banner{background:var(--soft); border-radius:var(--r); padding:12px 14px; margin-top:14px; font-size:15px}
 .banner.warn{border:2px solid var(--pP)}
 .mode{font-size:13px; color:var(--mut); margin-top:4px}
@@ -287,6 +326,15 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
         <div id="scorebox"></div>
       </div>
 
+      <div class="sec moresec">
+        <h3>More data <span class="opt">Open only what you need</span></h3>
+        <details class="more" data-sec="beh"><summary>Behavior <small id="sumBeh"></small></summary><div class="mbody" id="behBox"></div></details>
+        <details class="more" data-sec="time"><summary>Timing <small id="sumTime"></small></summary><div class="mbody" id="timeBox"></div></details>
+        <details class="more" data-sec="err"><summary>Errors <small id="sumErr"></small></summary><div class="mbody" id="errBox"></div></details>
+        <details class="more" data-sec="rate"><summary>Work rate &amp; breaks <small id="sumRate"></small></summary><div class="mbody" id="rateBox"></div></details>
+        <details class="more" data-sec="set"><summary>Setting <small id="sumSet"></small></summary><div class="mbody" id="setBox"></div></details>
+      </div>
+
       <div class="sec">
         <h3>Notes <span class="opt" style="font-size:14px">(optional)</span></h3>
         <textarea class="txt" id="fnote" maxlength="1500" placeholder="How did it go? Supports used, behaviors, what to work on next"></textarea>
@@ -306,7 +354,7 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
   <section id="vProg" hidden>
     <div class="lbl">Every session so far, for this job and class</div>
     <div class="tablewrap"><table>
-      <thead><tr><th>Student</th><th class="c">Sessions</th><th>Accuracy</th><th class="c">Avg rating</th><th>Latest assistance</th><th class="c">Prompts per session</th><th>All prompts given</th><th>Last</th></tr></thead>
+      <thead><tr><th>Student</th><th class="c">Sessions</th><th>Accuracy</th><th class="c">Avg rating</th><th>Latest assistance</th><th class="c">On task</th><th class="c">Prompts per session</th><th>All prompts given</th><th>Last</th></tr></thead>
       <tbody id="prog"></tbody>
     </table></div>
     <div class="key" id="key"></div>
@@ -403,7 +451,7 @@ $("fd").value=TODAY;
    Two homes for the same data:
    - On its own (any browser, no Claude): saved on this device (localStorage) + backup/CSV files.
    - Opened inside Claude: the shared artifact database.            */
-const M={classes:[], students:[], customJobs:[], steps:{}, customSkills:[], entries:[]};
+const M={classes:[], students:[], customJobs:[], steps:{}, customSkills:[], lists:{}, entries:[]};
 let db=null, dls=null, mode="local", ready=false;
 const inClaude=!!(window.claude&&typeof window.claude.use==="function");
 const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
@@ -422,7 +470,7 @@ function persistLocal(){
 function loadLocal(){
   const raw=lsGet(LKEY);
   let d=null; try{ d=raw?JSON.parse(raw):null }catch(e){}
-  if(d && Array.isArray(d.students)){ Object.assign(M,{classes:d.classes||[],students:d.students||[],customJobs:d.customJobs||[],steps:d.steps||{},customSkills:d.customSkills||[],entries:d.entries||[]}); }
+  if(d && Array.isArray(d.students)){ Object.assign(M,{classes:d.classes||[],students:d.students||[],customJobs:d.customJobs||[],steps:d.steps||{},customSkills:d.customSkills||[],lists:d.lists||{},entries:d.entries||[]}); }
   else if(SEED){ M.students=SEED.students.map(s=>({...s})); M.classes=[...new Set(SEED.students.map(s=>s.cls))]; persistLocal(); }
   fixClasses();
 }
@@ -431,6 +479,7 @@ function fixClasses(){ for(const s of M.students) if(!M.classes.includes(s.cls))
 async function saveRoster(){ fixClasses(); if(mode==="db") await db.doc("config/roster").set({students:M.students,classes:M.classes}); else persistLocal(); }
 async function saveJobs(){ if(mode==="db") await db.doc("config/jobs").set({custom:M.customJobs}); else persistLocal(); }
 async function saveSteps(){ if(mode==="db") await db.doc("config/steps").set({jobs:M.steps}); else persistLocal(); }
+async function saveLists(){ if(mode==="db") await db.doc("config/lists").set({...M.lists}); else persistLocal(); }
 async function saveSkills(){ if(mode==="db") await db.doc("config/skills").set({custom:M.customSkills}); else persistLocal(); }
 /* Write one entry to the account database, then read it back to be sure it stuck
    (two saves at the same moment could otherwise overwrite each other). */
@@ -486,13 +535,15 @@ async function delEntry(sid,id){
 }
 
 /* ================= view state ================= */
-let ui={job:"coffee", cls:null, types:{}, skills:{}, view:"log", manCls:null};
+let ui={job:"coffee", cls:null, types:{}, skills:{}, view:"log", manCls:null, otEvery:0, setting:null, openSecs:[]};
 try{ Object.assign(ui, JSON.parse(lsGet("jst.ui")||"{}")); }catch(e){}
-const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills}));
+const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs}));
 let F=null; // the entry being filled in
 function freshForm(){
   F={stu:F?F.stu:null, assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[ui.job]||["ct"]), skills:new Set(ui.skills[ui.job]||[]),
-     c:0, t:5, v:"", rating:0, done:null, checked:new Set()};
+     c:0, t:5, v:"", rating:0, done:null, sp:{}, touched:new Set(),
+     beh:{}, ot:{on:0,off:0}, otNext:ui.otEvery?Date.now()+ui.otEvery*60000:null, otDue:false, engage:0, abc:{a:"",b:"",c:""},
+     tm:{task:{acc:0,st:null}, lat:{acc:0,st:null}}, errs:{}, items:"", mins:"", brk:0, workMin:"", setting:ui.setting||null, editBeh:false, editErr:false};
   $("fnote").value="";
 }
 freshForm();
@@ -562,6 +613,7 @@ function renderPanel(){
     +`<button type="button" class="chip sm add" data-open="addSkillForm" data-focus="newSkill">+ Add skill</button>`;
   renderAssist();
   renderPrompts();
+  renderMore();
   $("stypes").innerHTML=STYPES.map(([k,n])=>`<button type="button" class="chip sm" data-stype="${k}" aria-pressed="${F.types.has(k)}"><span class="ck">${F.types.has(k)?"✓":""}</span>${n}</button>`).join("");
   renderScore();
 }
@@ -589,7 +641,7 @@ function renderScore(){
     if(k==="rating") h=`<div class="rate">${[1,2,3,4,5].map(r=>`<button type="button" data-rate="${r}" aria-pressed="${F.rating===r}" aria-label="Rating ${r}">${r}</button>`).join("")}</div><div class="ends"><span>1 = needs a lot of help</span><span>5 = excellent</span></div>`;
     if(k==="steps"){
       const steps=M.steps[ui.job]||[];
-      h=`<div class="steps">${steps.length?steps.map((t,i)=>`<div class="steprow"><button type="button" class="stepbtn" data-stepi="${i}" aria-pressed="${F.checked.has(i)}"><span class="box">${F.checked.has(i)?"✓":""}</span><span class="t">${esc(t)}</span></button><button type="button" class="link" data-rmstep="${i}">Remove</button></div>`).join("")
+      h=`<p class="sub" style="font-size:14px;margin:0 0 6px">For each step, tap the prompt the student needed (I = did it alone) or ✗ if the step wasn't done.</p><div class="steps">${steps.length?steps.map((t,i)=>`<div class="steprow2"><span class="t">${i+1}. ${esc(t)}</span><span class="stepp">${[...PROMPTS.map(x=>x[0]),"X"].map(k=>`<button type="button" data-sp="${k}" data-spi="${i}" aria-pressed="${F.sp[i]===k}" aria-label="${esc(t)}: ${k==="X"?"not done":PROMPTS.find(x=>x[0]===k)[1]}">${k==="X"?"✗":k}</button>`).join("")}</span><button type="button" class="link" data-rmstep="${i}">Remove</button></div>`).join("")
           :`<div class="empty">No steps yet for ${esc(jobName(ui.job))}. Add the job's steps below, in order. They're saved for next time.</div>`}
         <form class="addjob" id="addStepForm"><input class="txt" id="newStep" maxlength="80" placeholder="Add a step, e.g. Fill the water tank" aria-label="New step" autocomplete="off"><button class="btn ghost sm" type="submit">Add step</button></form>
         ${steps.length?`<div class="pct" id="pctSteps"></div>`:""}</div>`;
@@ -599,25 +651,33 @@ function renderScore(){
   }
   box.innerHTML=parts.join("");
   const fc=$("fc"), ft=$("ft"), fv=$("fv"), sf=$("addStepForm");
-  if(fc) fc.addEventListener("input",()=>{F.c=Math.max(0,parseInt(fc.value)||0); updSave();});
-  if(ft) ft.addEventListener("input",()=>{F.t=Math.max(0,parseInt(ft.value)||0); updSave();});
+  if(fc) fc.addEventListener("input",()=>{F.c=Math.max(0,parseInt(fc.value)||0); F.touched.add("ct"); updSave();});
+  if(ft) ft.addEventListener("input",()=>{F.t=Math.max(0,parseInt(ft.value)||0); F.touched.add("ct"); updSave();});
   if(fv) fv.addEventListener("input",()=>{F.v=fv.value.replace(/[^\d.]/g,""); updSave();});
   if(sf) sf.addEventListener("submit",addStep);
   updSave();
 }
+/* A score only counts if you actually used it this session; untouched boxes are skipped, never saved as zeros. */
+function used(k){
+  if(!F.types.has(k)) return false;
+  if(k==="ct") return F.touched.has("ct");
+  if(k==="pct") return F.v!=="";
+  if(k==="rating") return !!F.rating;
+  if(k==="steps") return Object.keys(F.sp).length>0;
+  if(k==="done") return F.done!==null;
+  return false;
+}
+const usedTypes=()=>STYPES.map(x=>x[0]).filter(used);
 function problems(){
   const p=[];
-  if(F.types.has("ct")){ if(!F.t) p.push("Enter how many trials."); else if(F.c>F.t) p.push("Correct can't be more than trials."); }
-  if(F.types.has("pct")){ if(F.v==="") p.push("Type the percent."); else if(!(+F.v>=0&&+F.v<=100)) p.push("Percent must be between 0 and 100."); }
-  if(F.types.has("rating")&&!F.rating) p.push("Pick a rating.");
-  if(F.types.has("steps")&&!(M.steps[ui.job]||[]).length) p.push("Add the job's steps first.");
-  if(F.types.has("done")&&F.done===null) p.push("Pick Done or Not done.");
-  if(!F.types.size && !ptotal(F.prompts) && !F.assist && !$("fnote").value.trim()) p.push("Pick an assistance level, count prompts, pick a way to measure, or write a note.");
+  if(used("ct")){ if(!F.t) p.push("Enter how many trials."); else if(F.c>F.t) p.push("Correct can't be more than trials."); }
+  if(used("pct")&&!(+F.v>=0&&+F.v<=100)) p.push("Percent must be between 0 and 100.");
+  if(!usedTypes().length && !ptotal(F.prompts) && !F.assist && !$("fnote").value.trim() && !extrasAny()) p.push("Pick an assistance level, count prompts, pick a way to measure, or write a note.");
   return p;
 }
 function updSave(){
   const a=$("pctCt"); if(a) a.textContent=F.t?Math.round(F.c/F.t*100)+"%":"–";
-  const b=$("pctSteps"); if(b){ const n=(M.steps[ui.job]||[]).length; b.textContent=n?`${F.checked.size} of ${n} steps · ${Math.round(F.checked.size/n*100)}%`:""; }
+  const b=$("pctSteps"); if(b){ const n=(M.steps[ui.job]||[]).length, d=stepsDone(), ind=Object.values(F.sp).filter(v=>v==="I").length; b.textContent=n?`${d} of ${n} steps done · ${Math.round(d/n*100)}% · ${ind} on their own`:""; }
   const p=problems();
   $("save").disabled=false;
   $("save").classList.toggle("dim",!!p.length);
@@ -632,7 +692,7 @@ function renderRecent(){
   $("recent").innerHTML=rows.length?rows.map(e=>{
     const bits=resultBits(e), sk=(e.skills||[]).join(", ");
     return `<div class="ent"><span class="ptags">${ptags(e.prompts)||'<span class="tag none" title="No prompts counted">–</span>'}</span>
-      <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))} · ${nice(e.d)}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
+      <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))} · ${nice(e.d)}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
       <span class="num res">${bits.map(esc).join("<br>")||(e.note?"<small>Note</small>":"")}</span>
       <button type="button" class="x" data-del="${esc(e.sid)}|${esc(e.id)}">Delete</button></div>`;
   }).join("") : `<div class="empty">No entries for this class yet. Tap a student above, fill in what you saw, then Save entry.</div>`;
@@ -649,10 +709,11 @@ function renderProg(){
     const pps=es.length?(ptotal(tot)/es.length).toFixed(1):"–";
     const last=es.length?nice(es[es.length-1].d):"";
     const la=[...es].reverse().find(e=>e.assist);
+    const ots=es.map(e=>e.beh&&e.beh.ontask).filter(Boolean), otOn=ots.reduce((a,o)=>a+o.on,0), otAll=ots.reduce((a,o)=>a+o.on+o.off,0);
     return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}</td><td class="c num">${es.length||"–"}</td>
       <td class="num">${pc===null?"–":pc+"%"}${pc===null?"":`<span class="bar"><i style="width:${pc}%"></i></span>`}</td>
-      <td class="c num">${ra}</td><td>${la?`<span class="alvl">${esc(assistName(la.assist))}</span>`:'<span style="color:var(--mut)">–</span>'}</td><td class="c num">${pps}</td><td><div class="ptags">${ptags(tot)||'<span style="color:var(--mut)">–</span>'}</div></td><td>${last}</td></tr>`;
-  }).join("") || `<tr><td colspan="8">No students in this classroom yet.</td></tr>`;
+      <td class="c num">${ra}</td><td>${la?`<span class="alvl">${esc(assistName(la.assist))}</span>`:'<span style="color:var(--mut)">–</span>'}</td><td class="c num">${otAll?Math.round(otOn/otAll*100)+"%":"–"}</td><td class="c num">${pps}</td><td><div class="ptags">${ptags(tot)||'<span style="color:var(--mut)">–</span>'}</div></td><td>${last}</td></tr>`;
+  }).join("") || `<tr><td colspan="9">No students in this classroom yet.</td></tr>`;
   $("key").innerHTML=PROMPTS.map(([k,n])=>`<span><span class="tag mini ${k}">${k}</span>${n}</span>`).join("");
 }
 function renderMan(){
@@ -710,13 +771,13 @@ document.addEventListener("click",async ev=>{
   else if(d.padd){ F.prompts[d.padd]++; renderPrompts(); updSave(); }
   else if(d.psub){ F.prompts[d.psub]=Math.max(0,F.prompts[d.psub]-1); renderPrompts(); updSave(); }
   else if(d.stype){ F.types.has(d.stype)?F.types.delete(d.stype):F.types.add(d.stype); ui.types[ui.job]=[...F.types]; remember(); renderPanel(); }
-  else if(d.f){ F[d.f]=Math.max(0,(F[d.f]||0)+(+d.d)); $(d.f==="c"?"fc":"ft").value=F[d.f]; updSave(); }
-  else if(d.rate){ F.rating=+d.rate; renderScore(); }
-  else if(d.done){ F.done=d.done==="1"; renderScore(); }
-  else if(d.stepi!==undefined){ const i=+d.stepi; F.checked.has(i)?F.checked.delete(i):F.checked.add(i); renderScore(); }
+  else if(d.f){ F[d.f]=Math.max(0,(F[d.f]||0)+(+d.d)); F.touched.add("ct"); $(d.f==="c"?"fc":"ft").value=F[d.f]; updSave(); }
+  else if(d.rate){ F.rating=F.rating===+d.rate?0:+d.rate; renderScore(); }
+  else if(d.done){ const v=d.done==="1"; F.done=F.done===v?null:v; renderScore(); }
+  else if(d.sp){ const i=+d.spi; F.sp[i]=F.sp[i]===d.sp?undefined:d.sp; if(F.sp[i]===undefined) delete F.sp[i]; renderScore(); }
   else if(d.rmstep!==undefined){ if(!arm(b,"Remove","Tap again")) return;
     const i=+d.rmstep, cur=[...(M.steps[ui.job]||[])]; cur.splice(i,1); M.steps={...M.steps,[ui.job]:cur};
-    const ch=new Set(); F.checked.forEach(k=>{ if(k<i) ch.add(k); else if(k>i) ch.add(k-1); }); F.checked=ch;
+    const sp={}; Object.entries(F.sp).forEach(([k,v])=>{ k=+k; if(k<i) sp[k]=v; else if(k>i) sp[k-1]=v; }); F.sp=sp;
     await guarded(saveSteps,"Couldn't remove the step."); renderScore(); }
   else if(d.del){ if(!arm(b,"Delete","Tap again to delete")) return;
     const [sid,id]=d.del.split("|"); await guarded(()=>delEntry(sid,id),"Couldn't delete that entry."); renderAll(); }
@@ -771,14 +832,15 @@ $("save").onclick=async()=>{
   if(p.length){ setMsg("To save, first: "+p.join(" "),true); return; }
   $("save").disabled=true; setMsg("Saving…");
   const scores={};
-  if(F.types.has("ct")) scores.ct={c:F.c,t:F.t};
-  if(F.types.has("pct")) scores.pct=Math.round(+F.v*10)/10;
-  if(F.types.has("rating")) scores.rating=F.rating;
-  if(F.types.has("steps")) scores.steps=(M.steps[ui.job]||[]).map((n,i)=>({n,ok:F.checked.has(i)}));
-  if(F.types.has("done")) scores.done=F.done;
+  if(used("ct")) scores.ct={c:F.c,t:F.t};
+  if(used("pct")) scores.pct=Math.round(+F.v*10)/10;
+  if(used("rating")) scores.rating=F.rating;
+  if(used("steps")) scores.steps=(M.steps[ui.job]||[]).map((n,i)=>({n,ok:STEP_OK.includes(F.sp[i]),p:F.sp[i]||""}));
+  if(used("done")) scores.done=F.done;
   const e={id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:$("fd").value||TODAY, j:ui.job, jn:jobName(ui.job), at:Date.now(),
            skills:[...F.skills], prompts:{...F.prompts}, scores};
   if(F.assist) e.assist=F.assist;
+  Object.assign(e, collectExtras());
   const note=$("fnote").value.trim(); if(note) e.note=note;
   try{
     const how=await addEntry(e);
@@ -881,11 +943,13 @@ function studentSection(w,s,es,meta){
   const jobs=[...new Set(st.sorted.map(e=>e.j))];
   w.table([{h:"Job",w:100,bold:true},{h:"Sessions",w:52},{h:"Accuracy",w:56},{h:"Avg rating",w:58},{h:"Latest assistance",w:96},{h:"Prompts given (total)",w:106},{h:"Per session",w:64}],
     jobs.map(j=>{ const x=statsOf(st.sorted.filter(e=>e.j===j)); return [jobName(j)==="Removed job"?(st.sorted.find(e=>e.j===j).jn||"Removed job"):jobName(j), String(x.n), x.acc, x.rating, x.assist, x.prompts, x.pps]; }));
+  const hb=habitsOf(st.sorted);
+  if(hb.length){ w.heading("Behavior and work habits"); w.table([{h:"Measure",w:170,bold:true},{h:"Result",w:362}], hb); }
   w.heading("Session log");
   w.table([{h:"Date",w:56},{h:"Job",w:78},{h:"Assistance",w:78},{h:"Prompts",w:66},{h:"Scores",w:78},{h:"Skills and notes",w:176}],
     st.sorted.map(e=>{
       const sk=(e.skills||[]).join(", ");
-      const notes=[sk?"Skills: "+sk:"", e.note?"Note: "+e.note:""].filter(Boolean).join("\n");
+      const notes=[sk?"Skills: "+sk:"", ...extraLines(e,false), e.note?"Note: "+e.note:""].filter(Boolean).join("\n");
       return [nice(e.d), jobName(e.j)==="Removed job"?(e.jn||"Removed job"):jobName(e.j), e.assist?assistName(e.assist):"-", promptShort(e.prompts)||"-", resultBits(e).join("\n")||"-", notes||"-"];
     }));
 }
@@ -951,17 +1015,203 @@ $("progPdf").onclick=()=>{
   setView("man"); $("reports").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
+/* ================= more data: behavior, timing, errors, rate, setting ================= */
+const STEP_OK=["I","G","V","M","P"];
+const DEF_BEH=["Off-task","Refusal","Left work area","Verbal outburst","Needed redirection"];
+const DEF_ERR=["Wrong item","Missed step","Out of order","Not to quality standard","Dropped or spilled"];
+const SETTINGS=["Classroom","School café","School store","Community job site","Other"];
+const behList=()=>M.lists.behaviors||DEF_BEH;
+const errList=()=>M.lists.errors||DEF_ERR;
+const stepsDone=()=>Object.values(F.sp).filter(v=>STEP_OK.includes(v)).length;
+const swSecs=t=>t.acc+(t.st?(Date.now()-t.st)/1000:0);
+const mmss=sec=>{ sec=Math.round(sec||0); return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0"); };
+const nz=o=>Object.fromEntries(Object.entries(o||{}).filter(([,v])=>v>0));
+const listTxt=o=>Object.entries(o||{}).map(([k,v])=>`${k} ${v}`).join(", ");
+function rateOf(r){ return r&&r.items>0&&r.mins>0 ? Math.round(r.items/r.mins*10)/10 : null; }
+
+function counterGrid(list,vals,kind,edit){
+  return `<div class="ctrs">${list.map(n=>`<div class="ctr2${vals[n]?" on":""}">
+    <button type="button" class="lab" data-${kind}plus="${esc(n)}" aria-label="Add one: ${esc(n)}">${esc(n)}</button>
+    <span class="n" aria-live="polite">${vals[n]||0}</span>
+    ${edit?`<button type="button" class="rm" data-${kind}rm="${esc(n)}" aria-label="Remove ${esc(n)} from the list">✕</button>`
+          :`<button type="button" class="m" data-${kind}minus="${esc(n)}" aria-label="Take away one: ${esc(n)}">−</button>`}</div>`).join("")}</div>
+  <form class="addjob" data-addlist="${kind}"><input class="txt" maxlength="40" placeholder="Add your own" aria-label="Add to list" autocomplete="off"><button class="btn ghost sm" type="submit">Add</button>
+  <button type="button" class="link" data-editlist="${kind}">${edit?"Done editing":"Edit list"}</button></form>`;
+}
+function renderMore(){
+  if(!$("behBox")) return;
+  const on=F.ot.on, all=F.ot.on+F.ot.off;
+  $("behBox").innerHTML=`<h4>Tap each time it happens</h4>${counterGrid(behList(),F.beh,"b",F.editBeh)}
+    <h4>On-task check</h4>
+    <div class="otbtns"><button type="button" class="big${F.otDue?" due":""}" data-otc="on">✓ On task</button><button type="button" class="big${F.otDue?" due":""}" data-otc="off">✗ Off task</button>
+      <span class="ptotal" style="margin:0">${all?`On ${on} · Off ${F.ot.off} · <b>${Math.round(on/all*100)}% on task</b>`:"No checks yet"}</span>
+      ${all?`<button type="button" class="link" data-otundo="1">Undo last</button>`:""}</div>
+    <div class="fields"><label>Remind me to check<select class="txt" id="otEvery" style="max-width:200px">${[0,1,2,3,5].map(m=>`<option value="${m}"${ui.otEvery===m?" selected":""}>${m?`Every ${m} minute${m>1?"s":""}`:"No reminder"}</option>`).join("")}</select></label>
+      <span class="sub" id="otNextTxt" style="font-size:14px"></span></div>
+    <h4>Engagement</h4>
+    <div class="rate">${[1,2,3,4,5].map(r=>`<button type="button" data-eng="${r}" aria-pressed="${F.engage===r}" aria-label="Engagement ${r}">${r}</button>`).join("")}</div>
+    <div class="ends"><span>1 = not engaged</span><span>5 = fully engaged</span></div>
+    <h4>ABC note (for a bigger incident)</h4>
+    <div class="abc"><textarea class="txt" id="abcA" placeholder="Before: what happened right before" aria-label="Antecedent">${esc(F.abc.a)}</textarea>
+      <textarea class="txt" id="abcB" placeholder="Behavior: what the student did" aria-label="Behavior">${esc(F.abc.b)}</textarea>
+      <textarea class="txt" id="abcC" placeholder="After: what happened next" aria-label="Consequence">${esc(F.abc.c)}</textarea></div>`;
+  $("timeBox").innerHTML=[["task","Task time","How long the job took"],["lat","Time to start","From your direction to the student starting"]].map(([k,n,h])=>`
+    <div class="sw"><span class="lbl2">${n}<br><small class="sub" style="font-weight:400">${h}</small></span><span class="clock" id="clk_${k}">${mmss(swSecs(F.tm[k]))}</span>
+      <button type="button" class="btn sm${F.tm[k].st?" ghost":""}" data-sw="${k}">${F.tm[k].st?"Pause":swSecs(F.tm[k])?"Resume":"Start"}</button>
+      <button type="button" class="link" data-swr="${k}">Reset</button></div>`).join("");
+  $("errBox").innerHTML=`<h4>Tap each time it happens</h4>${counterGrid(errList(),F.errs,"e",F.editErr)}`;
+  const rt=rateOf({items:+F.items,mins:+F.mins});
+  $("rateBox").innerHTML=`<div class="fields">
+      <label>Items completed<input class="numin" id="fItems" inputmode="numeric" value="${esc(F.items)}"></label>
+      <label>Minutes worked<input class="numin" id="fMins" inputmode="decimal" value="${esc(F.mins)}"></label>
+      <button type="button" class="btn ghost sm" data-usetask="1">Use task time</button>
+      <span class="pct" id="rateOut" style="font-size:22px">${rt!==null?rt+" per minute":""}</span></div>
+    <div class="fields"><label>Breaks taken<span class="step"><button type="button" data-brk="-1" aria-label="One less break">−</button><input id="fBrk" class="numin" style="width:64px" value="${F.brk}" aria-label="Breaks" inputmode="numeric"><button type="button" data-brk="1" aria-label="One more break">+</button></span></label>
+      <label>Worked before first break (min)<input class="numin" id="fWork" inputmode="decimal" value="${esc(F.workMin)}"></label></div>`;
+  $("setBox").innerHTML=`<div class="chips">${SETTINGS.map(x=>`<button type="button" class="chip sm" data-setting="${esc(x)}" aria-pressed="${F.setting===x}">${esc(x)}</button>`).join("")}</div>
+    <p class="sub" style="font-size:13px;margin:0">The tracker remembers your last setting.</p>`;
+  for(const [id,k] of [["abcA","a"],["abcB","b"],["abcC","c"]]) $(id).addEventListener("input",ev=>{ F.abc[k]=ev.target.value; moreSummaries(); updSave(); });
+  $("otEvery").addEventListener("change",ev=>{ ui.otEvery=+ev.target.value; remember(); F.otNext=ui.otEvery?Date.now()+ui.otEvery*60000:null; F.otDue=false; renderMore(); });
+  const num=(id,key)=>$(id).addEventListener("input",ev=>{ F[key]=ev.target.value.replace(/[^\d.]/g,""); const r=rateOf({items:+F.items,mins:+F.mins}); $("rateOut").textContent=r!==null?r+" per minute":""; moreSummaries(); updSave(); });
+  num("fItems","items"); num("fMins","mins"); num("fWork","workMin");
+  $("fBrk").addEventListener("input",ev=>{ F.brk=Math.max(0,parseInt(ev.target.value)||0); moreSummaries(); updSave(); });
+  document.querySelectorAll("details.more").forEach(dt=>{ dt.open=ui.openSecs.includes(dt.dataset.sec); });
+  moreSummaries();
+}
+function moreSummaries(){
+  const b=nz(F.beh), bt=Object.values(b).reduce((a,c)=>a+c,0), all=F.ot.on+F.ot.off;
+  $("sumBeh").textContent=[bt?`${bt} count${bt>1?"s":""}`:"", all?`${Math.round(F.ot.on/all*100)}% on task`:"", F.engage?`engagement ${F.engage}/5`:"", (F.abc.a||F.abc.b||F.abc.c)?"ABC note":""].filter(Boolean).join(" · ");
+  const ts=swSecs(F.tm.task), ls=swSecs(F.tm.lat);
+  $("sumTime").textContent=[ts?`task ${mmss(ts)}`:"", ls?`start ${mmss(ls)}`:"", (F.tm.task.st||F.tm.lat.st)?"running":""].filter(Boolean).join(" · ");
+  const et=Object.values(nz(F.errs)).reduce((a,c)=>a+c,0); $("sumErr").textContent=et?`${et} error${et>1?"s":""}`:"";
+  const r=rateOf({items:+F.items,mins:+F.mins});
+  $("sumRate").textContent=[r!==null?`${r}/min`:"", F.brk?`${F.brk} break${F.brk>1?"s":""}`:""].filter(Boolean).join(" · ");
+  $("sumSet").textContent=F.setting||"";
+}
+function extrasAny(){
+  return Object.values(nz(F.beh)).length||F.ot.on+F.ot.off||F.engage||F.abc.a||F.abc.b||F.abc.c||swSecs(F.tm.task)||swSecs(F.tm.lat)
+    ||Object.values(nz(F.errs)).length||F.items||F.mins||F.brk||F.workMin ? true : false;
+}
+function collectExtras(){
+  const x={};
+  const beh={}, bc=nz(F.beh);
+  if(Object.keys(bc).length) beh.counts=bc;
+  if(F.ot.on+F.ot.off) beh.ontask={on:F.ot.on,off:F.ot.off};
+  if(F.engage) beh.engage=F.engage;
+  if(F.abc.a.trim()||F.abc.b.trim()||F.abc.c.trim()) beh.abc={a:F.abc.a.trim(),b:F.abc.b.trim(),c:F.abc.c.trim()};
+  if(Object.keys(beh).length) x.beh=beh;
+  const ts=Math.round(swSecs(F.tm.task)), ls=Math.round(swSecs(F.tm.lat));
+  if(ts||ls){ x.time={}; if(ts) x.time.task=ts; if(ls) x.time.start=ls; }
+  const ec=nz(F.errs); if(Object.keys(ec).length) x.errs=ec;
+  if(F.items!==""||F.mins!==""){ x.rate={}; if(F.items!=="") x.rate.items=+F.items; if(F.mins!=="") x.rate.mins=+F.mins; }
+  if(F.brk||F.workMin!==""){ x.breaks={n:F.brk}; if(F.workMin!=="") x.breaks.workMin=+F.workMin; }
+  if(F.setting) x.setting=F.setting;
+  return x;
+}
+function extraLines(e,short){
+  const L=[], b=e.beh||{};
+  if(b.counts&&Object.keys(b.counts).length) L.push("Behavior: "+listTxt(b.counts));
+  if(b.ontask){ const a=b.ontask.on+b.ontask.off; if(a) L.push(`On task ${Math.round(b.ontask.on/a*100)}% (${b.ontask.on} of ${a} checks)`); }
+  if(b.engage) L.push(`Engagement ${b.engage}/5`);
+  if(b.abc&&!short) L.push(`ABC - Before: ${b.abc.a||"-"}; Behavior: ${b.abc.b||"-"}; After: ${b.abc.c||"-"}`);
+  else if(b.abc) L.push("ABC note");
+  if(e.time){ if(e.time.task) L.push(`Task time ${mmss(e.time.task)}`); if(e.time.start) L.push(`Time to start ${mmss(e.time.start)}`); }
+  const st=e.scores&&e.scores.steps;
+  if(st&&st.some(x=>x.p)){ const ind=st.filter(x=>x.p==="I").length; L.push(`Steps on their own: ${ind} of ${st.length}`);
+    if(!short) L.push("Step prompts: "+st.map((x,i)=>`${i+1}. ${x.n} ${x.p==="X"?"not done":x.p||"-"}`).join("; ")); }
+  if(e.errs&&Object.keys(e.errs).length) L.push("Errors: "+listTxt(e.errs));
+  if(e.rate){ const r=rateOf(e.rate); L.push(`${e.rate.items??"?"} items in ${e.rate.mins??"?"} min`+(r!==null?` (${r}/min)`:"")); }
+  if(e.breaks&&(e.breaks.n||e.breaks.workMin!=null)) L.push(`Breaks ${e.breaks.n||0}`+(e.breaks.workMin!=null?`, worked ${e.breaks.workMin} min before first break`:""));
+  if(e.setting) L.push("Setting: "+e.setting);
+  return L;
+}
+function habitsOf(es){
+  const rows=[], n=es.length; if(!n) return rows;
+  const withBeh=es.filter(e=>e.beh&&e.beh.counts), tot={};
+  withBeh.forEach(e=>Object.entries(e.beh.counts).forEach(([k,v])=>tot[k]=(tot[k]||0)+v));
+  Object.entries(tot).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>rows.push([k,`${v} total, ${(v/n).toFixed(1)} per session (${n} session${n>1?"s":""})`]));
+  const ots=es.map(e=>e.beh&&e.beh.ontask).filter(Boolean), on=ots.reduce((a,o)=>a+o.on,0), all=ots.reduce((a,o)=>a+o.on+o.off,0);
+  if(all) rows.push(["On task",`${Math.round(on/all*100)}% of ${all} checks across ${ots.length} session${ots.length>1?"s":""}`]);
+  const eng=es.map(e=>e.beh&&e.beh.engage).filter(Boolean); if(eng.length) rows.push(["Engagement",`${(eng.reduce((a,b)=>a+b,0)/eng.length).toFixed(1)} of 5 on average`]);
+  const abcN=es.filter(e=>e.beh&&e.beh.abc).length; if(abcN) rows.push(["ABC notes",`${abcN} incident${abcN>1?"s":""} recorded (see session log)`]);
+  const tt=es.map(e=>e.time&&e.time.task).filter(Boolean); if(tt.length) rows.push(["Task time",`${mmss(tt.reduce((a,b)=>a+b,0)/tt.length)} on average (fastest ${mmss(Math.min(...tt))})`]);
+  const lt=es.map(e=>e.time&&e.time.start).filter(Boolean); if(lt.length) rows.push(["Time to start",`${mmss(lt.reduce((a,b)=>a+b,0)/lt.length)} on average`]);
+  const rs=es.map(e=>rateOf(e.rate)).filter(v=>v!==null); if(rs.length) rows.push(["Work rate",`${(rs.reduce((a,b)=>a+b,0)/rs.length).toFixed(1)} items per minute on average`]);
+  const bk=es.filter(e=>e.breaks); if(bk.length){ const nb=bk.reduce((a,e)=>a+(e.breaks.n||0),0), wm=bk.map(e=>e.breaks.workMin).filter(v=>v!=null);
+    rows.push(["Breaks",`${(nb/bk.length).toFixed(1)} per session`+(wm.length?`; worked ${(wm.reduce((a,b)=>a+b,0)/wm.length).toFixed(1)} min before the first break on average`:"")]); }
+  const et={}; es.forEach(e=>Object.entries(e.errs||{}).forEach(([k,v])=>et[k]=(et[k]||0)+v));
+  if(Object.keys(et).length) rows.push(["Errors",Object.entries(et).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} ${v}`).join(", ")]);
+  const sp=[]; es.forEach(e=>(e.scores&&e.scores.steps||[]).forEach(x=>{ if(x.p) sp.push(x.p); }));
+  if(sp.length){ const c={}; sp.forEach(p=>c[p]=(c[p]||0)+1); rows.push(["Step prompts",`Done on their own ${Math.round((c.I||0)/sp.length*100)}% of steps; `+PROMPTS.filter(([k])=>c[k]&&k!=="I").map(([k,nm])=>`${nm} ${c[k]}`).concat(c.X?[`Not done ${c.X}`]:[]).join(", ")]); }
+  const sets={}; es.forEach(e=>{ if(e.setting) sets[e.setting]=(sets[e.setting]||0)+1; });
+  if(Object.keys(sets).length) rows.push(["Settings",Object.entries(sets).map(([k,v])=>`${k} ${v}`).join(", ")]);
+  return rows;
+}
+function csvExtras(e){
+  const b=e.beh||{}, ot=b.ontask, a=ot?ot.on+ot.off:0, r=rateOf(e.rate), st=e.scores&&e.scores.steps;
+  return [e.setting||"", b.counts?listTxt(b.counts).replace(/,/g,";"):"", a?Math.round(ot.on/a*100):"", a||"", b.engage||"",
+    b.abc?`Before: ${b.abc.a} / Behavior: ${b.abc.b} / After: ${b.abc.c}`.replace(/\s+/g," "):"",
+    e.time&&e.time.task?Math.round(e.time.task/6)/10:"", e.time&&e.time.start?e.time.start:"",
+    e.rate&&e.rate.items!=null?e.rate.items:"", e.rate&&e.rate.mins!=null?e.rate.mins:"", r??"",
+    e.breaks?e.breaks.n||0:"", e.breaks&&e.breaks.workMin!=null?e.breaks.workMin:"",
+    e.errs?listTxt(e.errs).replace(/,/g,";"):"", st&&st.some(x=>x.p)?st.map(x=>`${x.n}: ${x.p==="X"?"not done":x.p||"-"}`).join("; "):""];
+}
+let actx=null;
+function beep(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; g.gain.value=.08; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+.3); }catch(e){} }
+document.addEventListener("click",async ev=>{
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  const b=ev.target.closest("button"); if(!b||!F) return;
+  const d=b.dataset;
+  const bump=(obj,k,by)=>{ obj[k]=Math.max(0,(obj[k]||0)+by); };
+  if(d.bplus){ bump(F.beh,d.bplus,1); renderMore(); updSave(); }
+  else if(d.bminus){ bump(F.beh,d.bminus,-1); renderMore(); updSave(); }
+  else if(d.eplus){ bump(F.errs,d.eplus,1); renderMore(); updSave(); }
+  else if(d.eminus){ bump(F.errs,d.eminus,-1); renderMore(); updSave(); }
+  else if(d.editlist){ if(d.editlist==="b") F.editBeh=!F.editBeh; else F.editErr=!F.editErr; renderMore(); }
+  else if(d.brm||d.erm){ const key=d.brm?"behaviors":"errors", name=d.brm||d.erm, cur=d.brm?behList():errList();
+    if(!arm(b,"✕","Sure?")) return; M.lists={...M.lists,[key]:cur.filter(x=>x!==name)}; await guarded(saveLists,"Couldn't change the list."); renderMore(); }
+  else if(d.otc){ F.ot[d.otc]++; F.ot.last=d.otc; F.otDue=false; if(ui.otEvery) F.otNext=Date.now()+ui.otEvery*60000; renderMore(); updSave(); }
+  else if(d.otundo){ if(F.ot.last&&F.ot[F.ot.last]>0) F.ot[F.ot.last]--; F.ot.last=null; renderMore(); updSave(); }
+  else if(d.eng){ F.engage=F.engage===+d.eng?0:+d.eng; renderMore(); updSave(); }
+  else if(d.sw){ const t=F.tm[d.sw]; if(t.st){ t.acc+= (Date.now()-t.st)/1000; t.st=null; } else t.st=Date.now(); renderMore(); updSave(); }
+  else if(d.swr){ F.tm[d.swr]={acc:0,st:null}; renderMore(); updSave(); }
+  else if(d.usetask){ const s=swSecs(F.tm.task); if(s){ F.mins=String(Math.round(s/6)/10); renderMore(); updSave(); } }
+  else if(d.brk){ F.brk=Math.max(0,F.brk+(+d.brk)); renderMore(); updSave(); }
+  else if(d.setting){ F.setting=F.setting===d.setting?null:d.setting; ui.setting=F.setting; remember(); renderMore(); }
+});
+document.addEventListener("submit",async ev=>{
+  const f=ev.target.closest("form[data-addlist]"); if(!f) return; ev.preventDefault();
+  const name=f.querySelector("input").value.trim().replace(/\s+/g," "); if(!name) return;
+  const key=f.dataset.addlist==="b"?"behaviors":"errors", cur=f.dataset.addlist==="b"?behList():errList();
+  if(!cur.some(x=>x.toLowerCase()===name.toLowerCase())){ M.lists={...M.lists,[key]:[...cur,name]}; await guarded(saveLists,"Couldn't add to the list."); }
+  renderMore();
+});
+document.addEventListener("toggle",ev=>{
+  const dt=ev.target; if(!dt.matches||!dt.matches("details.more")) return;
+  const set=new Set(ui.openSecs); dt.open?set.add(dt.dataset.sec):set.delete(dt.dataset.sec); ui.openSecs=[...set]; remember();
+},true);
+setInterval(()=>{
+  if(!F||$("panel").hidden) return;
+  for(const k of ["task","lat"]){ const el=$("clk_"+k); if(el&&F.tm[k].st) el.textContent=mmss(swSecs(F.tm[k])); }
+  if(F.tm.task.st||F.tm.lat.st) moreSummaries();
+  if(ui.otEvery&&F.otNext){
+    const left=F.otNext-Date.now(), nt=$("otNextTxt");
+    if(left<=0&&!F.otDue){ F.otDue=true; beep(); renderMore(); const box=document.querySelector('details[data-sec="beh"]'); if(box&&!box.open){ box.open=true; } }
+    if(nt) nt.textContent=F.otDue?"Time to check: is the student on task?":`Next check in ${mmss(left/1000)}`;
+  }
+},500);
+
 /* ================= export / backup ================= */
 function csvText(){
   const q=v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
-  const head=["Date","Student","Class","OT","Job","Skills scored","Assistance level","Independent","Gestural","Verbal","Model","Physical","Total prompts","Correct","Trials","Percent","Rating (1-5)","Steps done","Steps total","Done","Accuracy %","Notes"];
+  const head=["Date","Student","Class","OT","Job","Skills scored","Assistance level","Independent","Gestural","Verbal","Model","Physical","Total prompts","Correct","Trials","Percent","Rating (1-5)","Steps done","Steps total","Done","Accuracy %","Setting","Behavior counts","On-task %","On-task checks","Engagement (1-5)","ABC","Task time (min)","Time to start (sec)","Items completed","Minutes worked","Items per minute","Breaks","Worked before first break (min)","Errors","Step prompts","Notes"];
   const rows=[...M.entries].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0)).map(e=>{
     const sc=e.scores||{}, p=e.prompts||{}, st=stuById(e.sid), acc=accOf(e);
     return [nice(e.d), e.name, e.cls, st?(st.ot?"OT":""):"", jobName(e.j)==="Removed job"?(e.jn||""):jobName(e.j), (e.skills||[]).join("; "), e.assist?assistName(e.assist):"",
       p.I||0,p.G||0,p.V||0,p.M||0,p.P||0,ptotal(p),
       sc.ct?sc.ct.c:"", sc.ct?sc.ct.t:"", typeof sc.pct==="number"?sc.pct:"", sc.rating||"",
       sc.steps?sc.steps.filter(x=>x.ok).length:"", sc.steps?sc.steps.length:"", typeof sc.done==="boolean"?(sc.done?"Yes":"No"):"",
-      acc===null?"":Math.round(acc), (e.note||"").replace(/\s+/g," ")].map(q).join(",");
+      acc===null?"":Math.round(acc), ...csvExtras(e), (e.note||"").replace(/\s+/g," ")].map(q).join(",");
   });
   return [head.join(","),...rows].join("\r\n");
 }
@@ -1016,7 +1266,7 @@ $("restoreFile").addEventListener("change",ev=>{
     if(!d||d.app!=="job-skills-tracker"||!Array.isArray(d.students)){ $("dmsg").textContent="That file isn't a Job Skills Tracker backup."; return; }
     pendingRestore=d;
     $("dmsg").innerHTML=`This backup has ${d.students.length} students and ${(d.entries||[]).length} entries. Restoring replaces everything on this device. <button type="button" class="btn sm" id="doRestore">Replace with backup</button> <button type="button" class="link" id="noRestore">Cancel</button>`;
-    $("doRestore").onclick=()=>{ const x=pendingRestore; Object.assign(M,{classes:x.classes||[],students:x.students,customJobs:x.customJobs||[],steps:x.steps||{},customSkills:x.customSkills||[],entries:x.entries||[]}); fixClasses(); persistLocal(); pendingRestore=null; F.stu=null; renderAll(); $("dmsg").textContent="Backup restored."; };
+    $("doRestore").onclick=()=>{ const x=pendingRestore; Object.assign(M,{classes:x.classes||[],students:x.students,customJobs:x.customJobs||[],steps:x.steps||{},customSkills:x.customSkills||[],lists:x.lists||{},entries:x.entries||[]}); fixClasses(); persistLocal(); pendingRestore=null; F.stu=null; renderAll(); $("dmsg").textContent="Backup restored."; };
     $("noRestore").onclick=()=>{ pendingRestore=null; $("dmsg").textContent=""; };
   };
   r.readAsText(f); ev.target.value="";
@@ -1037,6 +1287,7 @@ else {
     db.doc("config/roster").onSnapshot(s=>{ const d=s.exists?s.data():{}; M.students=(d.students||[]).map(x=>({...x})); M.classes=[...(d.classes||[])]; fixClasses(); flatten(); ready=true; renderAll(); },()=>{});
     db.doc("config/jobs").onSnapshot(s=>{ M.customJobs=s.exists?[...(s.data().custom||[])]:[]; renderAll(); },()=>{});
     db.doc("config/steps").onSnapshot(s=>{ M.steps=s.exists?{...(s.data().jobs||{})}:{}; if(!$("panel").hidden) renderScore(); },()=>{});
+    db.doc("config/lists").onSnapshot(s=>{ M.lists=s.exists?{...s.data()}:{}; if(!$("panel").hidden) renderMore(); },()=>{});
     db.doc("config/skills").onSnapshot(s=>{ M.customSkills=s.exists?[...(s.data().custom||[])]:[]; if(!$("panel").hidden) renderPanel(); },()=>{});
     renderPending(); setTimeout(flushPending,1500);
     db.collection("logs").onSnapshot(q=>{ for(const k in logs) delete logs[k]; q.docs.forEach(d=>logs[d.id]=d.data()); flatten(); renderStudents(); renderRecent(); renderProg(); },()=>{});
