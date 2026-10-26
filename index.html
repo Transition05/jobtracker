@@ -214,6 +214,34 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.draft{color:var(--pV); font-weight:700}
+.stuhead{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:22px 0 8px}
+.stu.ingrp{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi) inset}
+.gbox{margin-top:18px; background:var(--soft); border-radius:18px; padding:14px}
+.ghead{display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; justify-content:space-between}
+.ghead h2{font-family:var(--display); font-weight:600; font-size:22px; margin:0}
+.gcards{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; margin-top:10px}
+.gcard{background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.gcard.live{border-color:var(--pV)}
+.gcard header{display:flex; flex-wrap:wrap; gap:6px; align-items:baseline}
+.gcard header b{font-family:var(--display); font-size:18px; overflow-wrap:anywhere}
+.gsum{margin-left:auto; font-size:12.5px; color:var(--mut); text-align:right}
+.grow{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.gl{width:78px; flex:none; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--mut)}
+.gcard button{border:2px solid var(--line); background:var(--panel); border-radius:10px; padding:6px 9px; font-weight:700; font-size:14px; min-height:38px}
+.gcard .gpb{width:44px; padding:2px 0; display:flex; flex-direction:column; align-items:center; line-height:1.05}
+.gcard .gpb small{font-size:12px; font-weight:700; font-variant-numeric:tabular-nums}
+.gcard .gpb.on{color:#fff; border-color:transparent}
+.gpb.on[data-gp="I"]{background:var(--pI)} .gpb.on[data-gp="G"]{background:var(--pG)} .gpb.on[data-gp="V"]{background:var(--pV)} .gpb.on[data-gp="M"]{background:var(--pM)} .gpb.on[data-gp="P"]{background:var(--pP)}
+.gcard .gbb b{margin-left:4px; font-variant-numeric:tabular-nums}
+.gcard .gbb.on{border-color:var(--pV)}
+.gnum{font-family:var(--display); font-weight:800; font-size:18px; font-variant-numeric:tabular-nums}
+.gclk{font-family:var(--display); font-weight:800; font-size:22px; min-width:64px; font-variant-numeric:tabular-nums}
+.gsel{height:38px; border:2px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:inherit; font-size:14px; flex:1; min-width:0}
+.gnote{min-height:40px; width:100%; border:2px solid var(--line); border-radius:10px; padding:6px 8px; font:inherit; font-size:14px; background:var(--panel); color:var(--ink); resize:vertical}
+.gcard footer{display:flex; flex-wrap:wrap; gap:6px; justify-content:space-between}
+.gcard footer button{border:0; background:none; text-decoration:underline; color:var(--mut); font-weight:400; padding:4px 2px; min-height:0}
+.gcard footer .more{color:var(--accent); font-weight:700}
 .editbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:0 0 12px; border:2px solid var(--hi)}
 .acts{display:flex; flex-direction:column; align-items:flex-end; gap:2px}
 .ent.editing{border:2px solid var(--hi)}
@@ -297,8 +325,18 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
   </div>
 
   <section id="vLog">
-    <div class="lbl">Student</div>
+    <div class="stuhead"><div class="lbl" style="margin:0">Student</div>
+      <button type="button" class="btn ghost sm" id="grpStart">Start a group session</button></div>
     <div id="students"><div class="empty">Loading your class lists…</div></div>
+
+    <section id="groupBox" class="gbox" hidden aria-label="Group session">
+      <div class="ghead">
+        <div><h2 id="gTitle">Group session</h2><p class="sub" id="gHelp" style="margin:2px 0 0"></p></div>
+        <div class="row" style="margin:0"><button class="btn" id="gSaveAll" type="button">Save all</button><button class="btn ghost" id="gEnd" type="button">End group</button></div>
+      </div>
+      <div class="msg" id="gmsg" aria-live="polite"></div>
+      <div class="gcards" id="gcards"></div>
+    </section>
 
     <div class="panel" id="panel" hidden>
       <div id="editBar" class="banner editbar" hidden><span id="editTxt"></span><button type="button" class="btn ghost sm" id="cancelEdit">Cancel edit</button></div>
@@ -549,8 +587,8 @@ async function updateEntry(e){
   M.entries=M.entries.map(x=>x.id===e.id?e:x); persistLocal(); return "saved";
 }
 function loadEntry(e){
-  ui.job=e.j; ui.cls=e.cls||ui.cls;
-  freshForm(); F.stu=e.sid; editId=e.id;
+  stash(); ui.job=e.j; ui.cls=e.cls||ui.cls;
+  F=newDraft(e.sid,e.j); editId=e.id;
   const sc=e.scores||{};
   F.assist=e.assist||null; F.prompts={I:0,G:0,V:0,M:0,P:0,...(e.prompts||{})}; F.skills=new Set(e.skills||[]);
   F.types=new Set(Object.keys(sc).filter(k=>STYPES.some(x=>x[0]===k)));
@@ -567,7 +605,7 @@ function loadEntry(e){
   F.items=e.rate&&e.rate.items!=null?String(e.rate.items):""; F.mins=e.rate&&e.rate.mins!=null?String(e.rate.mins):"";
   F.brk=(e.breaks&&e.breaks.n)||0; F.workMin=e.breaks&&e.breaks.workMin!=null?String(e.breaks.workMin):"";
   F.setting=e.setting||null; F.otNext=null;
-  $("fnote").value=e.note||""; $("fd").value=e.d;
+  F.note=e.note||""; F.d=e.d; syncInputs();
   remember(); setMsg("");
   renderAll(); showEditBar();
   $("panel").scrollIntoView({behavior:"smooth",block:"start"});
@@ -578,7 +616,7 @@ function showEditBar(){
   if(on) $("editTxt").textContent=`Editing ${e?e.name+"'s":"a"} ${e?jobName(e.j):""} entry from ${e?nice(e.d):""}. Change anything, then tap Save changes.`;
   $("save").textContent=on?"Save changes":"Save entry";
 }
-function stopEditing(){ editId=null; $("fd").value=TODAY; showEditBar(); }
+function stopEditing(){ editId=null; showEditBar(); }
 async function delEntry(sid,id){
   if(mode==="db" && pending.some(x=>x.id===id)){ pending=pending.filter(x=>x.id!==id); savePending(); return; }
   if(mode==="db"){
@@ -591,15 +629,48 @@ async function delEntry(sid,id){
 let ui={job:"coffee", cls:null, types:{}, skills:{}, view:"log", manCls:null, otEvery:0, setting:null, openSecs:[]};
 try{ Object.assign(ui, JSON.parse(lsGet("jst.ui")||"{}")); }catch(e){}
 const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs}));
-let F=null; // the entry being filled in
-function freshForm(){
-  F={stu:F?F.stu:null, assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[ui.job]||["ct"]), skills:new Set(ui.skills[ui.job]||[]),
+let F=null; // the entry being filled in (the open student's draft)
+let drafts={}; // unsaved work for each student, by student id
+let grp={on:false, sids:[], job:null}; // group session
+function newDraft(sid,job){
+  job=job||ui.job;
+  return {stu:sid||null, job, note:"", d:TODAY, hist:[], assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[job]||["ct"]), skills:new Set(ui.skills[job]||[]),
      c:0, t:5, v:"", rating:0, done:null, sp:{}, touched:new Set(),
      beh:{}, ot:{on:0,off:0}, otNext:ui.otEvery?Date.now()+ui.otEvery*60000:null, otDue:false, engage:0, abc:{a:"",b:"",c:""},
      tm:{task:{acc:0,st:null}, lat:{acc:0,st:null}}, errs:{}, items:"", mins:"", brk:0, workMin:"", setting:ui.setting||null, editBeh:false, editErr:false};
-  $("fnote").value="";
 }
+function syncInputs(){ if(!F) return; $("fnote").value=F.note||""; $("fd").value=F.d||TODAY; }
+function freshForm(){ F=newDraft(F?F.stu:null); syncInputs(); }
 freshForm();
+function withF(X,fn){ const prev=F; F=X; try{ return fn(); } finally{ F=prev; } }
+function hasData(X){ return !!X && withF(X,()=>!!(usedTypes().length||ptotal(F.prompts)||F.assist||(F.note||"").trim()||extrasAny())); }
+/* keep or drop the open student's draft before showing another */
+function stash(){ if(!F||!F.stu||editId) return; if(hasData(F)) drafts[F.stu]=F; else delete drafts[F.stu]; }
+function openStudent(sid){
+  if(editId) stopEditing();
+  stash();
+  F=drafts[sid]||newDraft(sid);
+  if(F.job!==ui.job){ ui.job=F.job; remember(); }
+  syncInputs(); setMsg("");
+}
+const DKEY="jst.drafts.v1";
+function packDraft(X){ return {...X, types:[...X.types], skills:[...X.skills], touched:[...X.touched]}; }
+function unpackDraft(o){ const X={...newDraft(o.stu,o.job),...o}; X.types=new Set(o.types||[]); X.skills=new Set(o.skills||[]); X.touched=new Set(o.touched||[]); X.hist=o.hist||[]; return X; }
+let draftTimer=null;
+function saveDraftsSoon(){ clearTimeout(draftTimer); draftTimer=setTimeout(saveDrafts,300); }
+function saveDrafts(){
+  stash();
+  const out={}; for(const [k,X] of Object.entries(drafts)) if(hasData(X)) out[k]=packDraft(X);
+  lsSet(DKEY,JSON.stringify({drafts:out, grp}));
+}
+function loadDrafts(){
+  try{ const d=JSON.parse(lsGet(DKEY)||"{}"); for(const [k,o] of Object.entries(d.drafts||{})) drafts[k]=unpackDraft(o); if(d.grp) grp=Object.assign(grp,d.grp); }catch(e){}
+}
+document.addEventListener("click",saveDraftsSoon,true);
+document.addEventListener("input",saveDraftsSoon,true);
+window.addEventListener("pagehide",saveDrafts);
+loadDrafts();
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") saveDrafts(); });
 
 const allJobs=()=>[...BASE_JOBS, ...M.customJobs.map(j=>[j.id,j.name])];
 const jobName=k=>(allJobs().find(j=>j[0]===k)||[k,"Removed job"])[1];
@@ -653,7 +724,9 @@ function renderStudents(){
   if(!list.length){ $("students").innerHTML=`<div class="empty">No students in this classroom yet. Add them in Classes &amp; data.</div>`; return; }
   $("students").innerHTML=`<div class="grid">`+list.map(s=>{
     const n=entriesFor(s.id).filter(e=>e.j===ui.job&&e.d===TODAY).length;
-    return `<button type="button" class="stu" data-stu="${esc(s.id)}" aria-pressed="${F.stu===s.id}"><span class="nm">${esc(s.name)}</span><span class="meta">${s.ot?'<span class="ot">OT</span>':""}${n?`<span class="done">✓ ${n} today</span>`:""}</span></button>`;
+    const live=(s.id===F.stu&&!editId)?hasData(F):hasData(drafts[s.id]);
+    const pressed=grp.on?grp.sids.includes(s.id):F.stu===s.id;
+    return `<button type="button" class="stu${grp.on&&pressed?" ingrp":""}" data-stu="${esc(s.id)}" aria-pressed="${pressed}"><span class="nm">${esc(s.name)}</span><span class="meta">${s.ot?'<span class="ot">OT</span>':""}${live?'<span class="draft">● In progress</span>':""}${n?`<span class="done">✓ ${n} today</span>`:""}</span></button>`;
   }).join("")+`</div>`;
 }
 function renderPanel(){
@@ -725,7 +798,7 @@ function problems(){
   const p=[];
   if(used("ct")){ if(!F.t) p.push("Enter how many trials."); else if(F.c>F.t) p.push("Correct can't be more than trials."); }
   if(used("pct")&&!(+F.v>=0&&+F.v<=100)) p.push("Percent must be between 0 and 100.");
-  if(!usedTypes().length && !ptotal(F.prompts) && !F.assist && !$("fnote").value.trim() && !extrasAny()) p.push("Pick an assistance level, count prompts, pick a way to measure, or write a note.");
+  if(!usedTypes().length && !ptotal(F.prompts) && !F.assist && !(F.note||"").trim() && !extrasAny()) p.push("Pick an assistance level, count prompts, pick a way to measure, or write a note.");
   return p;
 }
 function updSave(){
@@ -790,6 +863,7 @@ function renderMan(){
   $("rmClass").hidden=!!list.length;
 }
 function renderAll(){
+  renderGroup();
   renderMode(); renderPickers(); renderStudents(); renderPanel(); renderRecent(); renderProg(); renderMan();
 }
 function setView(v){
@@ -818,9 +892,14 @@ document.addEventListener("click",async ev=>{
   else if(d.close){ $(d.close).hidden=true; }
   else if(d.rmjob){ if(!arm(b,b.textContent,"Tap again to remove this job")) return;
     M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job="coffee"; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
-  else if(d.job){ ui.job=d.job; remember(); freshForm(); renderAll(); }
+  else if(d.job){ ui.job=d.job; remember();
+    if(F&&F.stu&&!editId&&hasData(F)) F.job=ui.job; else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
+    if(grp.on) groupSetJob(ui.job);
+    renderAll(); }
   else if(d.cls){ ui.cls=d.cls; F.stu=null; remember(); renderAll(); }
-  else if(d.stu){ if(editId) stopEditing(); freshForm(); F.stu=d.stu; setMsg(""); renderStudents(); renderPanel(); renderRecent(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); }
+  else if(d.stu){
+    if(grp.on){ groupToggle(d.stu); return; }
+    openStudent(d.stu); renderAll(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); }
   else if(d.skill){ F.skills.has(d.skill)?F.skills.delete(d.skill):F.skills.add(d.skill); ui.skills[ui.job]=[...F.skills]; remember(); renderPanel(); }
   else if(d.assist){ F.assist=F.assist===d.assist?null:d.assist; renderAssist(); updSave(); }
   else if(d.padd){ F.prompts[d.padd]++; renderPrompts(); updSave(); }
@@ -836,7 +915,7 @@ document.addEventListener("click",async ev=>{
     await guarded(saveSteps,"Couldn't remove the step."); renderScore(); }
   else if(d.edit){ const [sid,id]=d.edit.split("|"); const e=sortedEntries().find(x=>x.id===id&&x.sid===sid); if(e) loadEntry(e); }
   else if(d.del){ if(!arm(b,"Delete","Tap again to delete")) return;
-    const [sid,id]=d.del.split("|"); if(id===editId){ stopEditing(); freshForm(); F.stu=sid; } await guarded(()=>delEntry(sid,id),"Couldn't delete that entry."); renderAll(); }
+    const [sid,id]=d.del.split("|"); if(id===editId){ stopEditing(); F=drafts[sid]||newDraft(sid); syncInputs(); } await guarded(()=>delEntry(sid,id),"Couldn't delete that entry."); renderAll(); }
   else if(d.mancls){ ui.manCls=ui.manCls===d.mancls?null:d.mancls; renderMan(); }
   else if(d.ot){ const s=stuById(d.ot); if(!s) return; s.ot=!s.ot; await guarded(saveRoster,"Couldn't save that change."); renderAll(); }
   else if(d.rmstu){ const s=stuById(d.rmstu); if(!s) return;
@@ -846,15 +925,17 @@ document.addEventListener("click",async ev=>{
 });
 $("rmClass").onclick=async ev=>{ const b=ev.currentTarget; if(!arm(b,"Remove this empty classroom","Tap again to remove it")) return;
   M.classes=M.classes.filter(c=>c!==ui.manCls); ui.manCls=null; await guarded(saveRoster,"Couldn't remove the classroom."); renderAll(); };
-$("fnote").addEventListener("input",updSave);
-$("cancel").onclick=()=>{ if(editId) stopEditing(); F.stu=null; renderStudents(); renderPanel(); renderRecent(); };
-$("cancelEdit").onclick=()=>{ const sid=F.stu; stopEditing(); freshForm(); F.stu=sid; setMsg("Edit cancelled. Nothing was changed."); renderPanel(); renderRecent(); };
+$("fnote").addEventListener("input",()=>{ F.note=$("fnote").value; updSave(); });
+$("fd").addEventListener("change",()=>{ F.d=$("fd").value||TODAY; });
+$("cancel").onclick=()=>{ if(editId) stopEditing(); stash(); F=newDraft(null); syncInputs(); renderAll(); if(grp.on) $("groupBox").scrollIntoView({behavior:"smooth",block:"start"}); };
+$("cancelEdit").onclick=()=>{ const sid=F.stu; stopEditing(); F=drafts[sid]||newDraft(sid); syncInputs(); setMsg("Edit cancelled. Nothing was changed."); renderPanel(); renderRecent(); };
 $("clearForm").onclick=ev=>{
   const b=ev.currentTarget;
   if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Tap again to clear"; setTimeout(()=>{ b.classList.remove("armed"); b.textContent="Clear"; },4000); return; }
   b.classList.remove("armed"); b.textContent="Clear";
   const sid=F.stu, wasEditing=!!editId; if(wasEditing) stopEditing();
-  freshForm(); F.stu=sid; setMsg(wasEditing?"Cleared. The saved entry was not changed.":"Cleared."); renderPanel(); renderRecent();
+  delete drafts[sid]; F=newDraft(sid); syncInputs(); if(grp.on&&grp.sids.includes(sid)) drafts[sid]=F;
+  setMsg(wasEditing?"Cleared. The saved entry was not changed.":"Cleared."); renderAll();
 };
 
 function onForm(id,fn){ $(id).addEventListener("submit",ev=>{ ev.preventDefault(); fn(); }); }
@@ -863,7 +944,9 @@ onForm("addJobForm",async()=>{
   const hit=allJobs().find(j=>j[1].toLowerCase()===name.toLowerCase());
   if(hit) ui.job=hit[0];
   else { const id=uid("c"); M.customJobs=[...M.customJobs,{id,name}]; ui.job=id; await guarded(saveJobs,"Couldn't add the job."); }
-  $("newJob").value=""; $("addJobForm").hidden=true; remember(); freshForm(); renderAll();
+  $("newJob").value=""; $("addJobForm").hidden=true; remember();
+  if(F&&F.stu&&!editId&&hasData(F)) F.job=ui.job; else { F=newDraft(F&&F.stu); syncInputs(); }
+  renderAll();
 });
 onForm("addSkillForm",async()=>{
   const name=$("newSkill").value.trim().replace(/\s+/g," "); if(!name) return;
@@ -890,30 +973,145 @@ onForm("addStudentForm",async()=>{
   $("dmsg").textContent=`Added ${name} to ${ui.manCls}.`; $("newStudent").value=""; $("newOT").checked=false; renderAll(); $("newStudent").focus();
 });
 
+function buildEntry(X,orig){
+  return withF(X,()=>{
+    const s=stuById(F.stu), job=F.job, scores={};
+    if(used("ct")) scores.ct={c:F.c,t:F.t};
+    if(used("pct")) scores.pct=Math.round(+F.v*10)/10;
+    if(used("rating")) scores.rating=F.rating;
+    if(used("steps")) scores.steps=(M.steps[job]||[]).map((n,i)=>({n,ok:STEP_OK.includes(F.sp[i]),p:F.sp[i]||""}));
+    if(used("done")) scores.done=F.done;
+    const e={id:orig?orig.id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:F.d||TODAY, j:job, jn:jobName(job), at:orig?orig.at:Date.now(),
+             skills:[...F.skills], prompts:{...F.prompts}, scores};
+    if(orig) e.edited=Date.now();
+    if(F.assist) e.assist=F.assist;
+    Object.assign(e, collectExtras());
+    const note=(F.note||"").trim(); if(note) e.note=note;
+    return e;
+  });
+}
 $("save").onclick=async()=>{
   const s=stuById(F.stu); if(!s) return;
   const p=problems();
   if(p.length){ setMsg("To save, first: "+p.join(" "),true); return; }
   $("save").disabled=true; setMsg("Saving…");
-  const scores={};
-  if(used("ct")) scores.ct={c:F.c,t:F.t};
-  if(used("pct")) scores.pct=Math.round(+F.v*10)/10;
-  if(used("rating")) scores.rating=F.rating;
-  if(used("steps")) scores.steps=(M.steps[ui.job]||[]).map((n,i)=>({n,ok:STEP_OK.includes(F.sp[i]),p:F.sp[i]||""}));
-  if(used("done")) scores.done=F.done;
   const orig=editId?sortedEntries().find(x=>x.id===editId):null;
-  const e={id:orig?orig.id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:$("fd").value||TODAY, j:ui.job, jn:jobName(ui.job), at:orig?orig.at:Date.now(),
-           skills:[...F.skills], prompts:{...F.prompts}, scores};
-  if(orig) e.edited=Date.now();
-  if(F.assist) e.assist=F.assist;
-  Object.assign(e, collectExtras());
-  const note=$("fnote").value.trim(); if(note) e.note=note;
+  const e=buildEntry(F,orig);
   try{
     const how=orig?await updateEntry(e):await addEntry(e);
-    if(orig) stopEditing();
+    if(orig) stopEditing(); else delete drafts[s.id];
     setMsg(how==="queued"?`No connection right now. ${s.name}'s entry is kept on this device and will upload by itself.`:orig?`Changes saved for ${s.name}.`:`Saved for ${s.name}.`);
-    freshForm(); F.stu=s.id; renderStudents(); renderPanel(); renderRecent();
+    F=drafts[s.id]||newDraft(s.id); if(grp.on&&grp.sids.includes(s.id)) drafts[s.id]=F; syncInputs(); renderAll(); saveDrafts();
   }catch(err){ setMsg(err&&err.code==="invalid_argument"?"You can view this tracker but not add entries. Ask the owner for Contributor access.":"Couldn't save. Check your connection and tap Save entry again.",true); updSave(); }
+};
+
+
+/* ================= group session ================= */
+function getG(sid){
+  if(F&&F.stu===sid&&!editId){ drafts[sid]=F; return F; }
+  if(!drafts[sid]) drafts[sid]=newDraft(sid,grp.job||ui.job);
+  return drafts[sid];
+}
+function groupToggle(sid){
+  if(grp.sids.includes(sid)){ grp.sids=grp.sids.filter(x=>x!==sid); $("gmsg").textContent=hasData(drafts[sid])?`${stuById(sid).name} left the group. Their unsaved work is kept as a draft.`:""; }
+  else if(grp.sids.length>=6){ $("gmsg").textContent="A group can have up to 6 students. Remove one first."; return; }
+  else { grp.sids=[...grp.sids,sid]; const X=getG(sid); if(!hasData(X)) X.job=grp.job; }
+  renderStudents(); renderGroup(); saveDraftsSoon();
+}
+function groupSetJob(job){ grp.job=job; grp.sids.forEach(sid=>{ getG(sid).job=job; }); }
+function gSummary(X){
+  const pt=ptotal(X.prompts), a=X.ot.on+X.ot.off, b=Object.values(nz(X.beh)).reduce((x,y)=>x+y,0), bits=[];
+  if(X.assist) bits.push(assistName(X.assist));
+  if(X.touched.has("ct")) bits.push(`${X.c}/${X.t}`);
+  if(pt) bits.push(`${pt} prompt${pt>1?"s":""}`);
+  if(a) bits.push(`${Math.round(X.ot.on/a*100)}% on task`);
+  if(b) bits.push(`${b} behavior`);
+  return bits.join(" · ")||"Nothing yet";
+}
+function renderGroup(){
+  const box=$("groupBox"); box.hidden=!grp.on; $("grpStart").hidden=grp.on;
+  if(!grp.on) return;
+  $("gTitle").textContent=`Group session · ${jobName(grp.job||ui.job)}`;
+  const n=grp.sids.length, live=grp.sids.filter(sid=>hasData(getG(sid))).length;
+  $("gHelp").textContent=n?`${n} student${n>1?"s":""}. Tap names above to add or remove (up to 6). Use More details for scores, steps and notes.`:"Tap students above to add them to the group (up to 6).";
+  $("gSaveAll").textContent=live?`Save all (${live})`:"Save all";
+  $("gSaveAll").classList.toggle("dim",!live);
+  $("gcards").innerHTML=grp.sids.map(sid=>{
+    const s=stuById(sid); if(!s) return "";
+    const X=getG(sid), a=X.ot.on+X.ot.off, run=!!X.tm.task.st, secs=swSecs(X.tm.task);
+    return `<article class="gcard${hasData(X)?" live":""}" data-gsid="${esc(sid)}">
+      <header><b>${esc(s.name)}</b>${s.ot?'<span class="ot">OT</span>':""}<span class="gsum">${esc(gSummary(X))}</span></header>
+      <div class="grow"><span class="gl">Help</span><select class="gsel" data-gassist="1" aria-label="Assistance level for ${esc(s.name)}"><option value="">Assistance level…</option>${ASSIST.map(([k,nm])=>`<option value="${k}"${X.assist===k?" selected":""}>${nm}</option>`).join("")}</select></div>
+      <div class="grow"><span class="gl">Prompts</span>${PROMPTS.map(([k,nm])=>`<button type="button" class="gpb${X.prompts[k]?" on":""}" data-gp="${k}" aria-label="${nm} prompt for ${esc(s.name)}">${k}<small>${X.prompts[k]||0}</small></button>`).join("")}</div>
+      <div class="grow"><span class="gl">Trials</span><button type="button" data-gct="1">✓ Correct</button><button type="button" data-gct="0">✗ Missed</button><span class="gnum">${X.touched.has("ct")?`${X.c}/${X.t}`:""}</span></div>
+      <div class="grow"><span class="gl">On task</span><button type="button" data-got="on">✓ On</button><button type="button" data-got="off">✗ Off</button><span class="gnum">${a?Math.round(X.ot.on/a*100)+"%":""}</span></div>
+      <div class="grow"><span class="gl">Behavior</span>${behList().map(bn=>`<button type="button" class="gbb${X.beh[bn]?" on":""}" data-gb="${esc(bn)}">${esc(bn)}<b>${X.beh[bn]||""}</b></button>`).join("")}</div>
+      <div class="grow"><span class="gl">Timer</span><span class="gclk" data-gclk="${esc(sid)}">${mmss(secs)}</span><button type="button" data-gsw="1">${run?"Pause":secs?"Resume":"Start"}</button></div>
+      <textarea class="gnote" data-gnote="1" placeholder="Quick note" aria-label="Quick note for ${esc(s.name)}">${esc(X.note||"")}</textarea>
+      <footer><button type="button" data-gundo="1"${X.hist.length?"":" disabled"}>Undo last tap</button><button type="button" class="more" data-gmore="1">More details</button><button type="button" data-gremove="1">Remove</button></footer>
+    </article>`;
+  }).join("") || `<div class="empty">No students in the group yet.</div>`;
+}
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("button"); if(!b) return;
+  const card=b.closest(".gcard"); if(!card) return;
+  const sid=card.dataset.gsid, X=getG(sid), d=b.dataset;
+  if(d.gp){ X.prompts[d.gp]=(X.prompts[d.gp]||0)+1; X.hist.push(["p",d.gp]); }
+  else if(d.gct!==undefined){ if(!X.touched.has("ct")){ X.c=0; X.t=0; } X.types.add("ct"); X.touched.add("ct"); X.t++; if(d.gct==="1") X.c++; X.hist.push(["ct",d.gct]); }
+  else if(d.got){ X.ot[d.got]++; X.hist.push(["ot",d.got]); }
+  else if(d.gb){ X.beh[d.gb]=(X.beh[d.gb]||0)+1; X.hist.push(["b",d.gb]); }
+  else if(d.gsw){ const t=X.tm.task; if(t.st){ t.acc+=(Date.now()-t.st)/1000; t.st=null; } else t.st=Date.now(); }
+  else if(d.gundo){ const h=X.hist.pop(); if(!h) return;
+    if(h[0]==="p") X.prompts[h[1]]=Math.max(0,X.prompts[h[1]]-1);
+    if(h[0]==="ct"){ X.t=Math.max(0,X.t-1); if(h[1]==="1") X.c=Math.max(0,X.c-1); if(!X.t){ X.touched.delete("ct"); X.t=5; X.c=0; } }
+    if(h[0]==="ot") X.ot[h[1]]=Math.max(0,X.ot[h[1]]-1);
+    if(h[0]==="b") X.beh[h[1]]=Math.max(0,(X.beh[h[1]]||0)-1); }
+  else if(d.gmore){ openStudent(sid); renderAll(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); return; }
+  else if(d.gremove){ groupToggle(sid); return; }
+  else return;
+  renderGroup(); renderStudents();
+  if(F===X) renderPanel();
+});
+document.addEventListener("change",ev=>{
+  const sel=ev.target.closest(".gcard [data-gassist]"); if(!sel) return;
+  const X=getG(sel.closest(".gcard").dataset.gsid); X.assist=sel.value||null; renderGroup(); renderStudents(); if(F===X) renderPanel(); saveDraftsSoon();
+});
+document.addEventListener("input",ev=>{
+  const ta=ev.target.closest(".gcard [data-gnote]"); if(!ta) return;
+  const card=ta.closest(".gcard"), X=getG(card.dataset.gsid); X.note=ta.value;
+  card.classList.toggle("live",hasData(X)); card.querySelector(".gsum").textContent=gSummary(X);
+  if(F===X) $("fnote").value=X.note;
+});
+$("grpStart").onclick=()=>{
+  grp.on=true; grp.job=ui.job; grp.sids=[];
+  if(F&&F.stu&&!editId){ stash(); grp.sids=[F.stu]; }
+  F=newDraft(null); syncInputs(); setMsg("");
+  renderAll(); saveDraftsSoon(); $("groupBox").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("gEnd").onclick=ev=>{
+  const b=ev.currentTarget, live=grp.sids.filter(sid=>hasData(getG(sid))).length;
+  if(live && !arm(b,"End group","Unsaved work stays as drafts. Tap again")) return;
+  grp.on=false; grp.sids=[]; $("gmsg").textContent=""; renderAll(); saveDrafts();
+};
+$("gSaveAll").onclick=async()=>{
+  const btn=$("gSaveAll"); btn.disabled=true; $("gmsg").textContent="Saving…";
+  let saved=0, queued=0; const bad=[], fail=[];
+  for(const sid of [...grp.sids]){
+    const X=getG(sid), s=stuById(sid); if(!s||!hasData(X)) continue;
+    const pr=withF(X,problems); if(pr.length){ bad.push(`${s.name} (${pr[0]})`); continue; }
+    try{
+      const how=await addEntry(buildEntry(X,null)); saved++; if(how==="queued") queued++;
+      const fresh=newDraft(sid,grp.job); fresh.setting=X.setting; drafts[sid]=fresh; if(F===X){ F=fresh; syncInputs(); }
+    }catch(e){ fail.push(s.name); }
+  }
+  btn.disabled=false;
+  const parts=[];
+  if(saved) parts.push(`Saved ${saved} entr${saved>1?"ies":"y"}${queued?` (${queued} waiting to upload)`:""}.`);
+  if(!saved&&!bad.length&&!fail.length) parts.push("Nothing to save yet.");
+  if(bad.length) parts.push(`Not saved yet: ${bad.join("; ")}. Fix these in More details.`);
+  if(fail.length) parts.push(`Couldn't save ${fail.join(", ")}. Try again.`);
+  $("gmsg").textContent=parts.join(" ");
+  renderAll(); saveDrafts();
 };
 
 /* ================= PDF reports ================= */
@@ -1258,6 +1456,7 @@ document.addEventListener("toggle",ev=>{
   const set=new Set(ui.openSecs); dt.open?set.add(dt.dataset.sec):set.delete(dt.dataset.sec); ui.openSecs=[...set]; remember();
 },true);
 setInterval(()=>{
+  if(grp.on) document.querySelectorAll("[data-gclk]").forEach(el=>{ const X=drafts[el.dataset.gclk]; if(X&&X.tm.task.st) el.textContent=mmss(swSecs(X.tm.task)); });
   if(!F||$("panel").hidden) return;
   for(const k of ["task","lat"]){ const el=$("clk_"+k); if(el&&F.tm[k].st) el.textContent=mmss(swSecs(F.tm[k])); }
   if(F.tm.task.st||F.tm.lat.st) moreSummaries();
