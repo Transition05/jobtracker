@@ -214,6 +214,11 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.durrow{margin-top:12px}
+.supout{margin-top:8px; min-height:22px}
+.supout b{font-variant-numeric:tabular-nums}
+.gdur{display:flex; flex-direction:column; gap:4px; font-size:13px; font-weight:700; color:var(--mut)}
+.gsup{flex-basis:100%; padding-left:84px; font-size:12.5px; color:var(--mut)}
 .draft{color:var(--pV); font-weight:700}
 .stuhead{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:22px 0 8px}
 .stu.ingrp{border-color:var(--hi); box-shadow:0 0 0 2px var(--hi) inset}
@@ -342,6 +347,7 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
     <section id="groupBox" class="gbox" hidden aria-label="Group session">
       <div class="ghead">
         <div><h2 id="gTitle">Group session</h2><p class="sub" id="gHelp" style="margin:2px 0 0"></p></div>
+        <label class="gdur">Session length (min)<input class="numin" id="gDur" inputmode="decimal" placeholder="e.g. 30"></label>
         <div class="row" style="margin:0"><button class="btn" id="gSaveAll" type="button">Save all</button><button class="btn ghost" id="gEnd" type="button">End group</button></div>
       </div>
       <div class="msg" id="gmsg" aria-live="polite"></div>
@@ -367,6 +373,12 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
         <h3>Assistance level <span class="opt" style="font-size:14px">Overall for this session · tap again to clear</span></h3>
         <div class="assist" id="assist"></div>
         <div class="scale"><span>← Independent</span><span>Dependent →</span></div>
+        <div class="fields durrow">
+          <label>Session length (min)<input class="numin" id="fDur" inputmode="decimal" placeholder="e.g. 30"></label>
+          <button type="button" class="btn ghost sm" id="durFromTask">Use task time</button>
+          <label>Actual support (min) <span class="opt">optional</span><input class="numin" id="fSup" inputmode="decimal" placeholder="—"></label>
+        </div>
+        <div class="supout" id="supOut" aria-live="polite"></div>
         <h3 style="margin-top:20px">Prompts given <span class="opt" style="font-size:14px">Tap a level each time you prompt</span></h3>
         <div class="pcount" id="pcount"></div>
         <div class="ptotal" id="ptotal"></div>
@@ -488,6 +500,23 @@ const BASE_JOBS=[["coffee","Coffee Making"],["scanfind","Scan & Find"],["scanlog
 const BASE_SKILLS=["Task sequencing","Task initiation","Task completion","Following directions","Accuracy","Sorting / categorizing","Matching","Counting / money","Fine motor","Self-monitoring","Asking for help","Staying on task","Customer communication"];
 const PROMPTS=[["I","Independent"],["G","Gestural"],["V","Verbal"],["M","Model"],["P","Physical"]];
 const ASSIST=[["I","Independent","No help"],["MI","Modified independent","Uses a tool or extra time"],["S","Supervision / setup","Setup or standby only"],["MIN","Minimal assist","Helper does up to 25%"],["MOD","Moderate assist","Helper does 26–50%"],["MAX","Maximal assist","Helper does 51–75%"],["D","Dependent","Helper does over 75%"]];
+// share of the work the helper does at each level, used to estimate support time
+const rng=(lo,hi,u)=>lo>0?`${lo}–${hi}${u}`:`up to ${hi}${u}`;
+const ASSIST_PCT={I:[0,0],MI:[0,0],S:[0,0],MIN:[0,25],MOD:[26,50],MAX:[51,75],D:[76,100]};
+function supportRange(assist,dur){
+  const r=ASSIST_PCT[assist]; if(!r||!(dur>0)) return null;
+  const lo=dur*r[0]/100, hi=dur*r[1]/100, f=v=>Math.round(v*10)/10;
+  return {lo:f(lo),hi:f(hi),pct:r};
+}
+function supportText(e){ // e has assist, dur, sup
+  const dur=+e.dur, sup=e.sup;
+  if(!(dur>0)) return "";
+  if(sup!=null&&sup!==""&&+sup>=0) return `Session ${dur} min · support ${+sup} min (${Math.round(+sup/dur*100)}% of the session)`;
+  const r=supportRange(e.assist,dur);
+  if(!r) return `Session ${dur} min`;
+  if(r.pct[1]===0) return `Session ${dur} min · no hands-on support (${assistName(e.assist)})`;
+  return `Session ${dur} min · about ${rng(r.lo,r.hi," min")} of support (${assistName(e.assist)}, ${rng(r.pct[0],r.pct[1],"%")})`;
+}
 const assistName=k=>(ASSIST.find(a=>a[0]===k)||[k,""])[1];
 const STYPES=[["ct","Correct / trials"],["pct","Percent"],["rating","Rating 1–5"],["steps","Steps checklist"],["done","Done yes/no"]];
 const $=id=>document.getElementById(id);
@@ -615,6 +644,7 @@ function loadEntry(e){
   F.items=e.rate&&e.rate.items!=null?String(e.rate.items):""; F.mins=e.rate&&e.rate.mins!=null?String(e.rate.mins):"";
   F.brk=(e.breaks&&e.breaks.n)||0; F.workMin=e.breaks&&e.breaks.workMin!=null?String(e.breaks.workMin):"";
   F.setting=e.setting||null; F.otNext=null;
+  F.dur=e.dur!=null?String(e.dur):""; F.sup=e.sup!=null?String(e.sup):"";
   F.note=e.note||""; F.d=e.d; syncInputs();
   remember(); setMsg("");
   renderAll(); showEditBar();
@@ -641,13 +671,13 @@ try{ Object.assign(ui, JSON.parse(lsGet("jst.ui")||"{}")); }catch(e){}
 const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs}));
 let F=null; // the entry being filled in (the open student's draft)
 let drafts={}; // unsaved work for each student, by student id
-let grp={on:false, sids:[], job:null}; // group session
+let grp={on:false, sids:[], job:null, dur:""}; // group session
 function newDraft(sid,job){
   job=job||ui.job;
   return {stu:sid||null, job, note:"", d:TODAY, hist:[], assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[job]||["ct"]), skills:new Set(ui.skills[job]||[]),
      c:0, t:5, v:"", rating:0, done:null, sp:{}, touched:new Set(),
      beh:{}, ot:{on:0,off:0}, otNext:ui.otEvery?Date.now()+ui.otEvery*60000:null, otDue:false, engage:0, abc:{a:"",b:"",c:""},
-     tm:{task:{acc:0,st:null}, lat:{acc:0,st:null}}, errs:{}, items:"", mins:"", brk:0, workMin:"", setting:ui.setting||null, editBeh:false, editErr:false};
+     tm:{task:{acc:0,st:null}, lat:{acc:0,st:null}}, errs:{}, items:"", mins:"", brk:0, workMin:"", setting:ui.setting||null, editBeh:false, editErr:false, dur:grp.on&&grp.dur?grp.dur:"", sup:""};
 }
 function syncInputs(){ if(!F) return; $("fnote").value=F.note||""; $("fd").value=F.d||TODAY; }
 function freshForm(){ F=newDraft(F?F.stu:null); syncInputs(); }
@@ -753,7 +783,18 @@ function renderPanel(){
   $("stypes").innerHTML=STYPES.map(([k,n])=>`<button type="button" class="chip sm" data-stype="${k}" aria-pressed="${F.types.has(k)}"><span class="ck">${F.types.has(k)?"✓":""}</span>${n}</button>`).join("");
   renderScore();
 }
+function renderSupport(){
+  const el=$("supOut"); if(!el) return;
+  const dur=+F.dur;
+  if(!(dur>0)){ el.innerHTML=F.assist?`<span class="sub">Add the session length to see how much of it was hands-on support.</span>`:""; return; }
+  if(F.sup!==""){ const p=Math.round(+F.sup/dur*100); const match=ASSIST.find(([k])=>{ const r=ASSIST_PCT[k]; return r[1]>0&&p>=r[0]&&p<=r[1]; });
+    el.innerHTML=`<b>${+F.sup} of ${dur} min</b> was support (${p}%).${match&&F.assist!==match[0]?` That matches <b>${match[1]}</b>. <button type="button" class="link" data-useassist="${match[0]}">Use it</button>`:""}`; return; }
+  if(!F.assist){ el.innerHTML=`<span class="sub">Pick an assistance level above to estimate support time.</span>`; return; }
+  const r=supportRange(F.assist,dur);
+  el.innerHTML=r.pct[1]===0?`<b>No hands-on support</b> during the ${dur}-minute session.`:`About <b>${rng(r.lo,r.hi," min")}</b> of the ${dur}-minute session was hands-on support (${rng(r.pct[0],r.pct[1],"%")}).`;
+}
 function renderAssist(){
+  $("fDur").value=F.dur; $("fSup").value=F.sup; renderSupport();
   $("assist").innerHTML=ASSIST.map(([k,n,h],i)=>`<button type="button" class="as" data-assist="${k}" aria-pressed="${F.assist===k}" style="--w:${Math.round(i/6*100)}%"><b>${n}</b><span>${h}</span><i></i></button>`).join("");
 }
 function renderPrompts(){
@@ -912,6 +953,7 @@ document.addEventListener("click",async ev=>{
     openStudent(d.stu); renderAll(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); }
   else if(d.skill){ F.skills.has(d.skill)?F.skills.delete(d.skill):F.skills.add(d.skill); ui.skills[ui.job]=[...F.skills]; remember(); renderPanel(); }
   else if(d.assist){ F.assist=F.assist===d.assist?null:d.assist; renderAssist(); updSave(); }
+  else if(d.useassist){ F.assist=d.useassist; renderAssist(); updSave(); }
   else if(d.padd){ F.prompts[d.padd]++; renderPrompts(); updSave(); }
   else if(d.psub){ F.prompts[d.psub]=Math.max(0,F.prompts[d.psub]-1); renderPrompts(); updSave(); }
   else if(d.stype){ F.types.has(d.stype)?F.types.delete(d.stype):F.types.add(d.stype); ui.types[ui.job]=[...F.types]; remember(); renderPanel(); }
@@ -937,6 +979,9 @@ $("rmClass").onclick=async ev=>{ const b=ev.currentTarget; if(!arm(b,"Remove thi
   M.classes=M.classes.filter(c=>c!==ui.manCls); ui.manCls=null; await guarded(saveRoster,"Couldn't remove the classroom."); renderAll(); };
 $("fnote").addEventListener("input",()=>{ F.note=$("fnote").value; updSave(); });
 $("fd").addEventListener("change",()=>{ F.d=$("fd").value||TODAY; });
+$("fDur").addEventListener("input",()=>{ F.dur=$("fDur").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
+$("fSup").addEventListener("input",()=>{ F.sup=$("fSup").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
+$("durFromTask").onclick=()=>{ const s=swSecs(F.tm.task); if(s){ F.dur=String(Math.round(s/6)/10); renderAssist(); updSave(); } else setMsg("Start the task timer under More data → Timing first, or type the minutes.",false); };
 $("cancel").onclick=()=>{ if(editId) stopEditing(); stash(); F=newDraft(null); syncInputs(); renderAll(); if(grp.on) $("groupBox").scrollIntoView({behavior:"smooth",block:"start"}); };
 $("cancelEdit").onclick=()=>{ const sid=F.stu; stopEditing(); F=drafts[sid]||newDraft(sid); syncInputs(); setMsg("Edit cancelled. Nothing was changed."); renderPanel(); renderRecent(); };
 $("clearForm").onclick=ev=>{
@@ -1042,6 +1087,7 @@ function renderGroup(){
   const box=$("groupBox"); box.hidden=!grp.on; $("grpStart").hidden=grp.on;
   if(!grp.on) return;
   $("gTitle").textContent=`Group session · ${jobName(grp.job||ui.job)}`;
+  if(document.activeElement!==$("gDur")) $("gDur").value=grp.dur||"";
   const n=grp.sids.length, live=grp.sids.filter(sid=>hasData(getG(sid))).length;
   $("gHelp").textContent=n?`${n} student${n>1?"s":""}. Tap names above to add or remove (up to 6). Use More details for scores, steps and notes.`:"Tap students above to add them to the group (up to 6).";
   $("gSaveAll").textContent=live?`Save all (${live})`:"Save all";
@@ -1051,7 +1097,7 @@ function renderGroup(){
     const X=getG(sid), a=X.ot.on+X.ot.off, run=!!X.tm.task.st, secs=swSecs(X.tm.task);
     return `<article class="gcard${hasData(X)?" live":""}" data-gsid="${esc(sid)}">
       <header><b>${esc(s.name)}</b>${s.ot?'<span class="ot">OT</span>':""}<span class="gsum">${esc(gSummary(X))}</span></header>
-      <div class="grow"><span class="gl">Help</span><select class="gsel" data-gassist="1" aria-label="Assistance level for ${esc(s.name)}"><option value="">Assistance level…</option>${ASSIST.map(([k,nm])=>`<option value="${k}"${X.assist===k?" selected":""}>${nm}</option>`).join("")}</select></div>
+      <div class="grow"><span class="gl">Help</span><select class="gsel" data-gassist="1" aria-label="Assistance level for ${esc(s.name)}"><option value="">Assistance level…</option>${ASSIST.map(([k,nm])=>`<option value="${k}"${X.assist===k?" selected":""}>${nm}</option>`).join("")}</select>${(()=>{ const r=supportRange(X.assist,+X.dur); return r?`<span class="gsup">${r.pct[1]===0?"No hands-on support":`≈ ${rng(r.lo,r.hi,"")} of ${+X.dur} min support`}</span>`:""; })()}</div>
       <div class="grow"><span class="gl">Prompts</span>${PROMPTS.map(([k,nm])=>`<button type="button" class="gpb${X.prompts[k]?" on":""}" data-gp="${k}" aria-label="${nm} prompt for ${esc(s.name)}">${k}<small>${X.prompts[k]||0}</small></button>`).join("")}</div>
       <div class="grow"><span class="gl">Trials</span><button type="button" data-gct="1">✓ Correct</button><button type="button" data-gct="0">✗ Missed</button><span class="gnum">${X.touched.has("ct")?`${X.c}/${X.t}`:""}</span></div>
       <div class="grow"><span class="gl">On task</span>${["on","off"].map(k=>`<span class="gpair"><button type="button" data-got="${k}">${k==="on"?"✓ On":"✗ Off"} <b>${X.ot[k]}</b></button><button type="button" class="gm" data-gotm="${k}" aria-label="Take away one ${k==="on"?"on task":"off task"} for ${esc(s.name)}"${X.ot[k]?"":" disabled"}>−</button></span>`).join("")}<span class="gnum">${a?Math.round(X.ot.on/a*100)+"%":""}</span></div>
@@ -1092,6 +1138,11 @@ document.addEventListener("input",ev=>{
   const card=ta.closest(".gcard"), X=getG(card.dataset.gsid); X.note=ta.value;
   card.classList.toggle("live",hasData(X)); card.querySelector(".gsum").textContent=gSummary(X);
   if(F===X) $("fnote").value=X.note;
+});
+$("gDur").addEventListener("input",()=>{
+  const v=$("gDur").value.replace(/[^\d.]/g,""); const old=grp.dur||""; grp.dur=v;
+  grp.sids.forEach(sid=>{ const X=getG(sid); if(!X.dur||X.dur===old) X.dur=v; });
+  renderGroup(); saveDraftsSoon();
 });
 $("grpStart").onclick=()=>{
   grp.on=true; grp.job=ui.job; grp.sids=[];
@@ -1365,7 +1416,7 @@ function moreSummaries(){
 }
 function extrasAny(){
   return Object.values(nz(F.beh)).length||F.ot.on+F.ot.off||F.engage||F.abc.a||F.abc.b||F.abc.c||swSecs(F.tm.task)||swSecs(F.tm.lat)
-    ||Object.values(nz(F.errs)).length||F.items||F.mins||F.brk||F.workMin ? true : false;
+    ||Object.values(nz(F.errs)).length||F.items||F.mins||F.brk||F.workMin||F.dur||F.sup ? true : false;
 }
 function collectExtras(){
   const x={};
@@ -1381,6 +1432,8 @@ function collectExtras(){
   if(F.items!==""||F.mins!==""){ x.rate={}; if(F.items!=="") x.rate.items=+F.items; if(F.mins!=="") x.rate.mins=+F.mins; }
   if(F.brk||F.workMin!==""){ x.breaks={n:F.brk}; if(F.workMin!=="") x.breaks.workMin=+F.workMin; }
   if(F.setting) x.setting=F.setting;
+  if(+F.dur>0) x.dur=+F.dur;
+  if(F.sup!==""&&+F.sup>=0) x.sup=+F.sup;
   return x;
 }
 function extraLines(e,short){
@@ -1398,6 +1451,7 @@ function extraLines(e,short){
   if(e.rate){ const r=rateOf(e.rate); L.push(`${e.rate.items??"?"} items in ${e.rate.mins??"?"} min`+(r!==null?` (${r}/min)`:"")); }
   if(e.breaks&&(e.breaks.n||e.breaks.workMin!=null)) L.push(`Breaks ${e.breaks.n||0}`+(e.breaks.workMin!=null?`, worked ${e.breaks.workMin} min before first break`:""));
   if(e.setting) L.push("Setting: "+e.setting);
+  if(e.dur) L.unshift(supportText(e));
   return L;
 }
 function habitsOf(es){
@@ -1419,8 +1473,20 @@ function habitsOf(es){
   const sp=[]; es.forEach(e=>(e.scores&&e.scores.steps||[]).forEach(x=>{ if(x.p) sp.push(x.p); }));
   if(sp.length){ const c={}; sp.forEach(p=>c[p]=(c[p]||0)+1); rows.push(["Step prompts",`Done on their own ${Math.round((c.I||0)/sp.length*100)}% of steps; `+PROMPTS.filter(([k])=>c[k]&&k!=="I").map(([k,nm])=>`${nm} ${c[k]}`).concat(c.X?[`Not done ${c.X}`]:[]).join(", ")]); }
   const sets={}; es.forEach(e=>{ if(e.setting) sets[e.setting]=(sets[e.setting]||0)+1; });
+  const ds=es.filter(e=>e.dur>0);
+  if(ds.length){
+    const tot=ds.reduce((a,e)=>a+e.dur,0); let lo=0,hi=0,known=0;
+    ds.forEach(e=>{ if(e.sup!=null){ lo+=e.sup; hi+=e.sup; known++; } else { const r=supportRange(e.assist,e.dur); if(r){ lo+=r.lo; hi+=r.hi; known++; } } });
+    rows.unshift(["Session time",`${Math.round(tot)} min across ${ds.length} session${ds.length>1?"s":""} (${(tot/ds.length).toFixed(1)} min on average)`]);
+    if(known) rows.splice(1,0,["Support time",lo===hi?`${Math.round(lo)} min of hands-on support (${Math.round(lo/tot*100)}% of session time)`:`About ${rng(Math.round(lo),Math.round(hi)," min")} of hands-on support (${rng(Math.round(lo/tot*100),Math.round(hi/tot*100),"%")} of session time)`]);
+  }
   if(Object.keys(sets).length) rows.push(["Settings",Object.entries(sets).map(([k,v])=>`${k} ${v}`).join(", ")]);
   return rows;
+}
+function supCsv(e){
+  if(!(e.dur>0)) return ["","","",e.sup!=null?e.sup:""];
+  if(e.sup!=null) return [e.dur,e.sup,e.sup,e.sup];
+  const r=supportRange(e.assist,e.dur); return [e.dur, r?r.lo:"", r?r.hi:"", ""];
 }
 function csvExtras(e){
   const b=e.beh||{}, ot=b.ontask, a=ot?ot.on+ot.off:0, r=rateOf(e.rate), st=e.scores&&e.scores.steps;
@@ -1480,10 +1546,10 @@ setInterval(()=>{
 /* ================= export / backup ================= */
 function csvText(){
   const q=v=>{ const s=String(v??""); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; };
-  const head=["Date","Student","Class","OT","Job","Skills scored","Assistance level","Independent","Gestural","Verbal","Model","Physical","Total prompts","Correct","Trials","Percent","Rating (1-5)","Steps done","Steps total","Done","Accuracy %","Setting","Behavior counts","On-task %","On-task checks","Engagement (1-5)","ABC","Task time (min)","Time to start (sec)","Items completed","Minutes worked","Items per minute","Breaks","Worked before first break (min)","Errors","Step prompts","Notes"];
+  const head=["Date","Student","Class","OT","Job","Skills scored","Assistance level","Session length (min)","Support min (low)","Support min (high)","Actual support (min)","Independent","Gestural","Verbal","Model","Physical","Total prompts","Correct","Trials","Percent","Rating (1-5)","Steps done","Steps total","Done","Accuracy %","Setting","Behavior counts","On-task %","On-task checks","Engagement (1-5)","ABC","Task time (min)","Time to start (sec)","Items completed","Minutes worked","Items per minute","Breaks","Worked before first break (min)","Errors","Step prompts","Notes"];
   const rows=[...M.entries].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0)).map(e=>{
     const sc=e.scores||{}, p=e.prompts||{}, st=stuById(e.sid), acc=accOf(e);
-    return [nice(e.d), e.name, e.cls, st?(st.ot?"OT":""):"", jobName(e.j)==="Removed job"?(e.jn||""):jobName(e.j), (e.skills||[]).join("; "), e.assist?assistName(e.assist):"",
+    return [nice(e.d), e.name, e.cls, st?(st.ot?"OT":""):"", jobName(e.j)==="Removed job"?(e.jn||""):jobName(e.j), (e.skills||[]).join("; "), e.assist?assistName(e.assist):"", ...supCsv(e),
       p.I||0,p.G||0,p.V||0,p.M||0,p.P||0,ptotal(p),
       sc.ct?sc.ct.c:"", sc.ct?sc.ct.t:"", typeof sc.pct==="number"?sc.pct:"", sc.rating||"",
       sc.steps?sc.steps.filter(x=>x.ok).length:"", sc.steps?sc.steps.length:"", typeof sc.done==="boolean"?(sc.done?"Yes":"No"):"",
