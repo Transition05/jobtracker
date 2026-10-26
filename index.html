@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Skills"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#1E6B62"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
-<script>window.APP_VERSION="1792979486";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
+<script>window.APP_VERSION="1793050245";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
 <title>Job Skills Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
@@ -215,6 +215,15 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.pjob{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; margin-top:4px}
+.pjob label{font-size:13px; font-weight:700; color:var(--mut)}
+.pjob .txt{flex:0 1 260px; height:40px}
+.pjob .ctx{margin:0}
+.ptoggle{display:inline-flex; background:var(--soft); border-radius:999px; padding:3px; margin:6px 0 10px}
+.ptoggle button{border:0; background:none; padding:7px 16px; border-radius:999px; font-weight:700}
+.ptoggle button[aria-pressed="true"]{background:var(--panel); box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.jobmix{display:flex; flex-wrap:wrap; gap:4px; margin-top:4px}
+.jobmix span{font-size:12px; background:var(--soft); border-radius:6px; padding:1px 6px; white-space:nowrap}
 .picrow{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px}
 .piclbl{font-weight:700}
 .yn2{display:inline-flex; border:2px solid var(--line); border-radius:12px; overflow:hidden}
@@ -370,7 +379,8 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
     <div class="panel" id="panel" hidden>
       <div id="editBar" class="banner editbar" hidden><span id="editTxt"></span><button type="button" class="btn ghost sm" id="cancelEdit">Cancel edit</button></div>
       <h2 id="pName"></h2>
-      <p class="ctx" id="pCtx"></p>
+      <div class="pjob"><label for="pJob">Job for this entry</label><select class="txt" id="pJob"></select><span class="ctx" id="pCtx"></span></div>
+      <div class="msg" id="jobMsg" aria-live="polite" style="margin:4px 0 0;min-height:0"></div>
 
       <div class="sec">
         <h3>What are you scoring? <span class="opt" style="font-size:14px">Pick all that apply</span></h3>
@@ -431,9 +441,10 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
   </section>
 
   <section id="vProg" hidden>
-    <div class="lbl">Every session so far, for this job and class</div>
+    <div class="ptoggle" role="group" aria-label="Which jobs"><button type="button" data-pview="job" id="pvJob">This job</button><button type="button" data-pview="all" id="pvAll">All jobs</button></div>
+    <div class="lbl" id="progLbl" style="margin-top:4px">Every session so far, for this job and class</div>
     <div class="tablewrap"><table>
-      <thead><tr><th>Student</th><th class="c">Sessions</th><th>Accuracy</th><th class="c">Avg rating</th><th>Latest assistance</th><th class="c">On task</th><th class="c">Prompts per session</th><th>All prompts given</th><th>Last</th></tr></thead>
+      <thead><tr><th>Student</th><th class="c">Sessions</th><th id="thJobs" hidden>Jobs done</th><th>Accuracy</th><th class="c">Avg rating</th><th>Latest assistance</th><th class="c">On task</th><th class="c">Prompts per session</th><th>All prompts given</th><th>Last</th></tr></thead>
       <tbody id="prog"></tbody>
     </table></div>
     <div class="key" id="key"></div>
@@ -686,7 +697,7 @@ async function delEntry(sid,id){
 /* ================= view state ================= */
 let ui={job:"coffee", cls:null, types:{}, skills:{}, view:"log", manCls:null, otEvery:0, setting:null, openSecs:[]};
 try{ Object.assign(ui, JSON.parse(lsGet("jst.ui")||"{}")); }catch(e){}
-const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs}));
+const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs,progAll:ui.progAll}));
 let F=null; // the entry being filled in (the open student's draft)
 let drafts={}; // unsaved work for each student, by student id
 let grp={on:false, sids:[], job:null, dur:""}; // group session
@@ -705,6 +716,7 @@ function hasData(X){ return !!X && withF(X,()=>!!(usedTypes().length||ptotal(F.p
 /* keep or drop the open student's draft before showing another */
 function stash(){ if(!F||!F.stu||editId) return; if(hasData(F)) drafts[F.stu]=F; else delete drafts[F.stu]; }
 function openStudent(sid){
+  if($("jobMsg")) $("jobMsg").textContent="";
   if(editId) stopEditing();
   stash();
   F=drafts[sid]||newDraft(sid);
@@ -792,7 +804,8 @@ function renderPanel(){
   $("panel").hidden=!s;
   if(!s) return;
   $("pName").textContent=s.name;
-  $("pCtx").textContent=jobName(ui.job)+" · "+s.cls;
+  $("pJob").innerHTML=allJobs().map(([k,n])=>`<option value="${esc(k)}"${k===F.job?" selected":""}>${esc(n)}</option>`).join("");
+  $("pCtx").textContent=s.cls;
   $("skills").innerHTML=allSkills().map(k=>`<button type="button" class="chip sm" data-skill="${esc(k)}" aria-pressed="${F.skills.has(k)}"><span class="ck">${F.skills.has(k)?"✓":""}</span>${esc(k)}</button>`).join("")
     +`<button type="button" class="chip sm add" data-open="addSkillForm" data-focus="newSkill">+ Add skill</button>`;
   renderAssist();
@@ -896,9 +909,13 @@ function renderRecent(){
   }).join("") : `<div class="empty">${st?`No entries for ${esc(st.name)} yet.`:"No entries for this class yet. Tap a student above, fill in what you saw, then Save entry."}</div>`;
 }
 function renderProg(){
-  const list=M.students.filter(s=>s.cls===ui.cls);
+  const list=M.students.filter(s=>s.cls===ui.cls), all=!!ui.progAll;
+  $("pvJob").setAttribute("aria-pressed",String(!all)); $("pvAll").setAttribute("aria-pressed",String(all));
+  $("pvJob").textContent=jobName(ui.job);
+  $("progLbl").textContent=all?`Every session so far, all jobs, ${ui.cls||""}`:`Every session so far, ${jobName(ui.job)}, ${ui.cls||""}`;
+  $("thJobs").hidden=!all;
   $("prog").innerHTML=list.map(s=>{
-    const es=entriesFor(s.id).filter(e=>e.j===ui.job).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0));
+    const es=entriesFor(s.id).filter(e=>all||e.j===ui.job).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0));
     const acc=es.map(accOf).filter(v=>v!==null);
     const pc=acc.length?Math.round(acc.reduce((a,b)=>a+b,0)/acc.length):null;
     const rs=es.map(e=>e.scores&&e.scores.rating).filter(Boolean);
@@ -908,10 +925,13 @@ function renderProg(){
     const last=es.length?nice(es[es.length-1].d):"";
     const la=[...es].reverse().find(e=>e.assist);
     const ots=es.map(e=>e.beh&&e.beh.ontask).filter(Boolean), otOn=ots.reduce((a,o)=>a+o.on,0), otAll=ots.reduce((a,o)=>a+o.on+o.off,0);
-    return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}</td><td class="c num">${es.length||"–"}</td>
+    let mix="";
+    if(all){ const by={}; es.forEach(e=>{ (by[e.j]=by[e.j]||[]).push(e); });
+      mix=Object.entries(by).map(([j,list2])=>{ const a=list2.map(accOf).filter(v=>v!==null); return `<span>${esc(jobName(j)==="Removed job"?(list2[0].jn||"Removed job"):jobName(j))} ${list2.length}${a.length?` · ${Math.round(a.reduce((x,y)=>x+y,0)/a.length)}%`:""}</span>`; }).join(""); }
+    return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}</td><td class="c num">${es.length||"–"}</td>${all?`<td><div class="jobmix">${mix||'<span style="background:none;color:var(--mut)">–</span>'}</div></td>`:""}
       <td class="num">${pc===null?"–":pc+"%"}${pc===null?"":`<span class="bar"><i style="width:${pc}%"></i></span>`}</td>
       <td class="c num">${ra}</td><td>${la?`<span class="alvl">${esc(assistName(la.assist))}</span>`:'<span style="color:var(--mut)">–</span>'}</td><td class="c num">${otAll?Math.round(otOn/otAll*100)+"%":"–"}</td><td class="c num">${pps}</td><td><div class="ptags">${ptags(tot)||'<span style="color:var(--mut)">–</span>'}</div></td><td>${last}</td></tr>`;
-  }).join("") || `<tr><td colspan="9">No students in this classroom yet.</td></tr>`;
+  }).join("") || `<tr><td colspan="10">No students in this classroom yet.</td></tr>`;
   $("key").innerHTML=PROMPTS.map(([k,n])=>`<span><span class="tag mini ${k}">${k}</span>${n}</span>`).join("");
 }
 function renderMan(){
@@ -958,12 +978,13 @@ document.addEventListener("click",async ev=>{
   const d=b.dataset;
   if(b.id==="retryNow") flushPending();
   else if(d.view) setView(d.view);
+  else if(d.pview){ ui.progAll=d.pview==="all"; remember(); renderProg(); }
   else if(d.open){ $(d.open).hidden=false; $(d.focus).focus(); }
   else if(d.close){ $(d.close).hidden=true; }
   else if(d.rmjob){ if(!arm(b,b.textContent,"Tap again to remove this job")) return;
     M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job="coffee"; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
   else if(d.job){ ui.job=d.job; remember();
-    if(F&&F.stu&&!editId&&hasData(F)) F.job=ui.job; else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
+    if(F&&F.stu&&(editId||hasData(F))){ const m=moveDraftToJob(F,ui.job); if(m) $("jobMsg").textContent=m; } else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
     if(grp.on) groupSetJob(ui.job);
     renderAll(); }
   else if(d.cls){ ui.cls=d.cls; F.stu=null; remember(); renderAll(); }
@@ -998,6 +1019,10 @@ document.addEventListener("click",async ev=>{
 $("rmClass").onclick=async ev=>{ const b=ev.currentTarget; if(!arm(b,"Remove this empty classroom","Tap again to remove it")) return;
   M.classes=M.classes.filter(c=>c!==ui.manCls); ui.manCls=null; await guarded(saveRoster,"Couldn't remove the classroom."); renderAll(); };
 $("fnote").addEventListener("input",()=>{ F.note=$("fnote").value; updSave(); });
+$("pJob").addEventListener("change",()=>{
+  const m=moveDraftToJob(F,$("pJob").value); ui.job=F.job; remember();
+  renderAll(); $("jobMsg").textContent=m; saveDraftsSoon();
+});
 $("fd").addEventListener("change",()=>{ F.d=$("fd").value||TODAY; });
 $("fDur").addEventListener("input",()=>{ F.dur=$("fDur").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
 $("fSup").addEventListener("input",()=>{ F.sup=$("fSup").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
@@ -1048,6 +1073,14 @@ onForm("addStudentForm",async()=>{
   $("dmsg").textContent=`Added ${name} to ${ui.manCls}.`; $("newStudent").value=""; $("newOT").checked=false; renderAll(); $("newStudent").focus();
 });
 
+function moveDraftToJob(X,job){
+  if(!X||X.job===job) return "";
+  const oldSteps=M.steps[X.job]||[], newSteps=M.steps[job]||[], had=Object.keys(X.sp).length;
+  const sp={}; let kept=0;
+  Object.entries(X.sp).forEach(([i,v])=>{ const nm=oldSteps[+i]; const j=newSteps.findIndex(n=>n.toLowerCase()===String(nm||"").toLowerCase()); if(j>=0){ sp[j]=v; kept++; } });
+  X.sp=sp; X.job=job;
+  return had&&kept<had?`Moved to ${jobName(job)}. Step scores that don't match ${jobName(job)}'s steps were cleared; everything else was kept.`:`Moved to ${jobName(job)}. Everything you entered was kept.`;
+}
 function buildEntry(X,orig){
   return withF(X,()=>{
     const s=stuById(F.stu), job=F.job, scores={};

@@ -1,6 +1,6 @@
 // Keeps the tracker working with no internet once it has been opened online.
 // Online: always loads the newest tracker from the website. Offline: uses the saved copy.
-const CACHE = "job-skills-1792979486";
+const CACHE = "job-skills-1793050245";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(FILES.map(f => fetch(new Request(f, {cache: "reload"})).then(r => { if (r.ok) return c.put(f, r); }).catch(() => {})))).then(() => self.skipWaiting()));
