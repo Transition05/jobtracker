@@ -214,6 +214,9 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.editbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin:0 0 12px; border:2px solid var(--hi)}
+.acts{display:flex; flex-direction:column; align-items:flex-end; gap:2px}
+.ent.editing{border:2px solid var(--hi)}
 .moresec h3 .opt{font-size:14px}
 details.more{border:2px solid var(--line); border-radius:14px; background:var(--panel); margin-top:10px}
 details.more>summary{list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:600; font-size:18px}
@@ -298,6 +301,7 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
     <div id="students"><div class="empty">Loading your class lists…</div></div>
 
     <div class="panel" id="panel" hidden>
+      <div id="editBar" class="banner editbar" hidden><span id="editTxt"></span><button type="button" class="btn ghost sm" id="cancelEdit">Cancel edit</button></div>
       <h2 id="pName"></h2>
       <p class="ctx" id="pCtx"></p>
 
@@ -342,12 +346,13 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
       <div class="row">
         <input type="date" id="fd" aria-label="Date">
         <button class="btn" id="save" type="button" disabled>Save entry</button>
+        <button class="btn ghost" id="clearForm" type="button">Clear</button>
         <button class="btn ghost" id="cancel" type="button">Close</button>
       </div>
       <div class="msg" id="msg" aria-live="polite"></div>
     </div>
 
-    <div class="lbl" style="margin-top:28px">Latest entries</div>
+    <div class="lbl" style="margin-top:28px" id="recentLbl">Latest entries</div>
     <div class="list" id="recent"></div>
   </section>
 
@@ -526,6 +531,54 @@ async function addEntry(e){
     }
   } else { M.entries.push(e); if(!persistLocal()){ /* kept in memory */ } return "saved"; }
 }
+let editId=null;
+async function updateEntry(e){
+  if(mode==="db" && pending.some(x=>x.id===e.id)){ pending=pending.map(x=>x.id===e.id?{...e,pending:true}:x); savePending(); return "saved"; }
+  if(mode==="db"){
+    const {sid,pending:_p,...rest}=e;
+    for(let i=0;i<4;i++){
+      const ref=db.doc("logs/"+sid); const snap=await ref.get();
+      const cur=snap.exists?(snap.data().entries||[]):[];
+      await ref.set({entries:cur.some(x=>x.id===rest.id)?cur.map(x=>x.id===rest.id?rest:x):[...cur,rest]});
+      await new Promise(r=>setTimeout(r,250+Math.random()*400));
+      const chk=await ref.get();
+      if(chk.exists&&(chk.data().entries||[]).some(x=>x.id===rest.id&&x.edited===rest.edited)) return "saved";
+    }
+    throw {code:"unavailable"};
+  }
+  M.entries=M.entries.map(x=>x.id===e.id?e:x); persistLocal(); return "saved";
+}
+function loadEntry(e){
+  ui.job=e.j; ui.cls=e.cls||ui.cls;
+  freshForm(); F.stu=e.sid; editId=e.id;
+  const sc=e.scores||{};
+  F.assist=e.assist||null; F.prompts={I:0,G:0,V:0,M:0,P:0,...(e.prompts||{})}; F.skills=new Set(e.skills||[]);
+  F.types=new Set(Object.keys(sc).filter(k=>STYPES.some(x=>x[0]===k)));
+  if(sc.ct){ F.c=sc.ct.c; F.t=sc.ct.t; F.touched.add("ct"); }
+  if(typeof sc.pct==="number") F.v=String(sc.pct);
+  if(sc.rating) F.rating=sc.rating;
+  if(typeof sc.done==="boolean") F.done=sc.done;
+  if(sc.steps){ F.sp={}; sc.steps.forEach((x,i)=>{ const p=x.p||(x.ok?"I":""); if(p) F.sp[i]=p; }); }
+  const b=e.beh||{};
+  F.beh={...(b.counts||{})}; F.ot={on:(b.ontask&&b.ontask.on)||0,off:(b.ontask&&b.ontask.off)||0}; F.engage=b.engage||0;
+  F.abc={a:"",b:"",c:"",...(b.abc||{})};
+  F.tm={task:{acc:(e.time&&e.time.task)||0,st:null}, lat:{acc:(e.time&&e.time.start)||0,st:null}};
+  F.errs={...(e.errs||{})};
+  F.items=e.rate&&e.rate.items!=null?String(e.rate.items):""; F.mins=e.rate&&e.rate.mins!=null?String(e.rate.mins):"";
+  F.brk=(e.breaks&&e.breaks.n)||0; F.workMin=e.breaks&&e.breaks.workMin!=null?String(e.breaks.workMin):"";
+  F.setting=e.setting||null; F.otNext=null;
+  $("fnote").value=e.note||""; $("fd").value=e.d;
+  remember(); setMsg("");
+  renderAll(); showEditBar();
+  $("panel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function showEditBar(){
+  const on=!!editId, e=on&&sortedEntries().find(x=>x.id===editId);
+  $("editBar").hidden=!on;
+  if(on) $("editTxt").textContent=`Editing ${e?e.name+"'s":"a"} ${e?jobName(e.j):""} entry from ${e?nice(e.d):""}. Change anything, then tap Save changes.`;
+  $("save").textContent=on?"Save changes":"Save entry";
+}
+function stopEditing(){ editId=null; $("fd").value=TODAY; showEditBar(); }
 async function delEntry(sid,id){
   if(mode==="db" && pending.some(x=>x.id===id)){ pending=pending.filter(x=>x.id!==id); savePending(); return; }
   if(mode==="db"){
@@ -688,14 +741,16 @@ function setMsg(t,err){ $("msg").textContent=t; $("msg").classList.toggle("err",
 
 function sortedEntries(){ return [...M.entries, ...(mode==="db"?pending.filter(p=>!M.entries.some(e=>e.id===p.id)):[])].sort((a,b)=>(b.at||0)-(a.at||0)); }
 function renderRecent(){
-  const rows=sortedEntries().filter(e=>e.cls===ui.cls).slice(0,12);
+  const st=F&&F.stu?stuById(F.stu):null;
+  const rows=st?sortedEntries().filter(e=>e.sid===st.id).slice(0,60):sortedEntries().filter(e=>e.cls===ui.cls).slice(0,12);
+  $("recentLbl").textContent=st?`${st.name}'s entries (${sortedEntries().filter(e=>e.sid===st.id).length})`:"Latest entries";
   $("recent").innerHTML=rows.length?rows.map(e=>{
     const bits=resultBits(e), sk=(e.skills||[]).join(", ");
-    return `<div class="ent"><span class="ptags">${ptags(e.prompts)||'<span class="tag none" title="No prompts counted">–</span>'}</span>
+    return `<div class="ent${e.id===editId?" editing":""}"><span class="ptags">${ptags(e.prompts)||'<span class="tag none" title="No prompts counted">–</span>'}</span>
       <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))} · ${nice(e.d)}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
       <span class="num res">${bits.map(esc).join("<br>")||(e.note?"<small>Note</small>":"")}</span>
-      <button type="button" class="x" data-del="${esc(e.sid)}|${esc(e.id)}">Delete</button></div>`;
-  }).join("") : `<div class="empty">No entries for this class yet. Tap a student above, fill in what you saw, then Save entry.</div>`;
+      <span class="acts"><button type="button" class="x" data-edit="${esc(e.sid)}|${esc(e.id)}">Edit</button><button type="button" class="x" data-del="${esc(e.sid)}|${esc(e.id)}">Delete</button></span></div>`;
+  }).join("") : `<div class="empty">${st?`No entries for ${esc(st.name)} yet.`:"No entries for this class yet. Tap a student above, fill in what you saw, then Save entry."}</div>`;
 }
 function renderProg(){
   const list=M.students.filter(s=>s.cls===ui.cls);
@@ -765,7 +820,7 @@ document.addEventListener("click",async ev=>{
     M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job="coffee"; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
   else if(d.job){ ui.job=d.job; remember(); freshForm(); renderAll(); }
   else if(d.cls){ ui.cls=d.cls; F.stu=null; remember(); renderAll(); }
-  else if(d.stu){ freshForm(); F.stu=d.stu; setMsg(""); renderStudents(); renderPanel(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); }
+  else if(d.stu){ if(editId) stopEditing(); freshForm(); F.stu=d.stu; setMsg(""); renderStudents(); renderPanel(); renderRecent(); $("panel").scrollIntoView({behavior:"smooth",block:"start"}); }
   else if(d.skill){ F.skills.has(d.skill)?F.skills.delete(d.skill):F.skills.add(d.skill); ui.skills[ui.job]=[...F.skills]; remember(); renderPanel(); }
   else if(d.assist){ F.assist=F.assist===d.assist?null:d.assist; renderAssist(); updSave(); }
   else if(d.padd){ F.prompts[d.padd]++; renderPrompts(); updSave(); }
@@ -779,8 +834,9 @@ document.addEventListener("click",async ev=>{
     const i=+d.rmstep, cur=[...(M.steps[ui.job]||[])]; cur.splice(i,1); M.steps={...M.steps,[ui.job]:cur};
     const sp={}; Object.entries(F.sp).forEach(([k,v])=>{ k=+k; if(k<i) sp[k]=v; else if(k>i) sp[k-1]=v; }); F.sp=sp;
     await guarded(saveSteps,"Couldn't remove the step."); renderScore(); }
+  else if(d.edit){ const [sid,id]=d.edit.split("|"); const e=sortedEntries().find(x=>x.id===id&&x.sid===sid); if(e) loadEntry(e); }
   else if(d.del){ if(!arm(b,"Delete","Tap again to delete")) return;
-    const [sid,id]=d.del.split("|"); await guarded(()=>delEntry(sid,id),"Couldn't delete that entry."); renderAll(); }
+    const [sid,id]=d.del.split("|"); if(id===editId){ stopEditing(); freshForm(); F.stu=sid; } await guarded(()=>delEntry(sid,id),"Couldn't delete that entry."); renderAll(); }
   else if(d.mancls){ ui.manCls=ui.manCls===d.mancls?null:d.mancls; renderMan(); }
   else if(d.ot){ const s=stuById(d.ot); if(!s) return; s.ot=!s.ot; await guarded(saveRoster,"Couldn't save that change."); renderAll(); }
   else if(d.rmstu){ const s=stuById(d.rmstu); if(!s) return;
@@ -791,7 +847,15 @@ document.addEventListener("click",async ev=>{
 $("rmClass").onclick=async ev=>{ const b=ev.currentTarget; if(!arm(b,"Remove this empty classroom","Tap again to remove it")) return;
   M.classes=M.classes.filter(c=>c!==ui.manCls); ui.manCls=null; await guarded(saveRoster,"Couldn't remove the classroom."); renderAll(); };
 $("fnote").addEventListener("input",updSave);
-$("cancel").onclick=()=>{ F.stu=null; renderStudents(); renderPanel(); };
+$("cancel").onclick=()=>{ if(editId) stopEditing(); F.stu=null; renderStudents(); renderPanel(); renderRecent(); };
+$("cancelEdit").onclick=()=>{ const sid=F.stu; stopEditing(); freshForm(); F.stu=sid; setMsg("Edit cancelled. Nothing was changed."); renderPanel(); renderRecent(); };
+$("clearForm").onclick=ev=>{
+  const b=ev.currentTarget;
+  if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Tap again to clear"; setTimeout(()=>{ b.classList.remove("armed"); b.textContent="Clear"; },4000); return; }
+  b.classList.remove("armed"); b.textContent="Clear";
+  const sid=F.stu, wasEditing=!!editId; if(wasEditing) stopEditing();
+  freshForm(); F.stu=sid; setMsg(wasEditing?"Cleared. The saved entry was not changed.":"Cleared."); renderPanel(); renderRecent();
+};
 
 function onForm(id,fn){ $(id).addEventListener("submit",ev=>{ ev.preventDefault(); fn(); }); }
 onForm("addJobForm",async()=>{
@@ -837,14 +901,17 @@ $("save").onclick=async()=>{
   if(used("rating")) scores.rating=F.rating;
   if(used("steps")) scores.steps=(M.steps[ui.job]||[]).map((n,i)=>({n,ok:STEP_OK.includes(F.sp[i]),p:F.sp[i]||""}));
   if(used("done")) scores.done=F.done;
-  const e={id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:$("fd").value||TODAY, j:ui.job, jn:jobName(ui.job), at:Date.now(),
+  const orig=editId?sortedEntries().find(x=>x.id===editId):null;
+  const e={id:orig?orig.id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:$("fd").value||TODAY, j:ui.job, jn:jobName(ui.job), at:orig?orig.at:Date.now(),
            skills:[...F.skills], prompts:{...F.prompts}, scores};
+  if(orig) e.edited=Date.now();
   if(F.assist) e.assist=F.assist;
   Object.assign(e, collectExtras());
   const note=$("fnote").value.trim(); if(note) e.note=note;
   try{
-    const how=await addEntry(e);
-    setMsg(how==="queued"?`No connection right now. ${s.name}'s entry is kept on this device and will upload by itself.`:`Saved for ${s.name}.`);
+    const how=orig?await updateEntry(e):await addEntry(e);
+    if(orig) stopEditing();
+    setMsg(how==="queued"?`No connection right now. ${s.name}'s entry is kept on this device and will upload by itself.`:orig?`Changes saved for ${s.name}.`:`Saved for ${s.name}.`);
     freshForm(); F.stu=s.id; renderStudents(); renderPanel(); renderRecent();
   }catch(err){ setMsg(err&&err.code==="invalid_argument"?"You can view this tracker but not add entries. Ask the owner for Contributor access.":"Couldn't save. Check your connection and tap Save entry again.",true); updSave(); }
 };
