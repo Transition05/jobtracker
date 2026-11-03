@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Skills"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#1E6B62"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
-<script>window.APP_VERSION="1793666617";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
+<script>window.APP_VERSION="1793672097";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
 <title>Job Skills Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
@@ -215,6 +215,12 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.chip .ck{margin-right:4px}
+.chip.edj{display:inline-flex; align-items:center; gap:8px; padding-right:6px; border-style:dashed}
+.chip.edj .rmj{border:0; background:var(--pP); color:#fff; border-radius:999px; width:28px; height:28px; font-weight:800; display:grid; place-items:center}
+.chip.edj .rmj.armed{width:auto; padding:0 10px}
+#jobs .link{align-self:center}
+.pjl{font-size:13px; font-weight:700; color:var(--mut)}
 .chip.allcls{border-style:dashed}
 .chip.allcls[aria-pressed="true"]{border-style:solid}
 .clsgrp{margin-top:10px}
@@ -392,7 +398,7 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
     <div class="panel" id="panel" hidden>
       <div id="editBar" class="banner editbar" hidden><span id="editTxt"></span><button type="button" class="btn ghost sm" id="cancelEdit">Cancel edit</button></div>
       <h2 id="pName"></h2>
-      <div class="pjob"><label for="pJob">Job for this entry</label><select class="txt" id="pJob"></select><span class="ctx" id="pCtx"></span></div>
+      <div class="pjob"><span class="pjl">Job for this entry</span><span class="chips" id="pJobs"></span><span class="ctx" id="pCtx"></span></div>
       <div class="msg" id="jobMsg" aria-live="polite" style="margin:4px 0 0;min-height:0"></div>
 
       <div class="sec">
@@ -669,8 +675,8 @@ async function updateEntry(e){
   M.entries=M.entries.map(x=>x.id===e.id?e:x); persistLocal(); return "saved";
 }
 function loadEntry(e){
-  stash(); ui.job=e.j||""; ui.cls=ui.cls==="__all"?"__all":(e.cls||ui.cls);
-  F=newDraft(e.sid,e.j); editId=e.id;
+  stash(); setSel(entryJobs(e)); ui.cls=ui.cls==="__all"?"__all":(e.cls||ui.cls);
+  F=newDraft(e.sid,entryJobs(e)); editId=e.id;
   const sc=e.scores||{};
   F.assist=e.assist||null; F.prompts={I:0,G:0,V:0,M:0,P:0,...(e.prompts||{})}; F.skills=new Set(e.skills||[]);
   F.types=new Set(Object.keys(sc).filter(k=>STYPES.some(x=>x[0]===k)));
@@ -696,7 +702,7 @@ function loadEntry(e){
 function showEditBar(){
   const on=!!editId, e=on&&sortedEntries().find(x=>x.id===editId);
   $("editBar").hidden=!on;
-  if(on) $("editTxt").textContent=`Editing ${e?e.name+"'s":"a"} ${e?jobName(e.j):""} entry from ${e?nice(e.d):""}. Change anything, then tap Save changes.`;
+  if(on) $("editTxt").textContent=`Editing ${e?e.name+"'s":"a"} ${e?entryJobsText(e):""} entry from ${e?nice(e.d):""}. Change anything, then tap Save changes.`;
   $("save").textContent=on?"Save changes":"Save entry";
 }
 function stopEditing(){ editId=null; showEditBar(); }
@@ -711,13 +717,16 @@ async function delEntry(sid,id){
 /* ================= view state ================= */
 let ui={job:"coffee", cls:null, types:{}, skills:{}, view:"log", manCls:null, otEvery:0, setting:null, openSecs:[]};
 try{ Object.assign(ui, JSON.parse(lsGet("jst.ui")||"{}")); }catch(e){}
-const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs,progAll:ui.progAll}));
+const remember=()=>lsSet("jst.ui",JSON.stringify({job:ui.job,jobs:ui.jobs,cls:ui.cls,types:ui.types,skills:ui.skills,otEvery:ui.otEvery,setting:ui.setting,openSecs:ui.openSecs,progAll:ui.progAll}));
+if(!Array.isArray(ui.jobs)) ui.jobs=ui.job?[ui.job]:[];
+ui.job=ui.jobs[0]||"";
 let F=null; // the entry being filled in (the open student's draft)
 let drafts={}; // unsaved work for each student, by student id
 let grp={on:false, sids:[], job:null, dur:""}; // group session
-function newDraft(sid,job){
-  job=job||ui.job;
-  return {stu:sid||null, job, note:"", d:TODAY, hist:[], assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[job]||["ct"]), skills:new Set(ui.skills[job]||[]),
+function newDraft(sid,jobs){
+  jobs=jobs===undefined?[...ui.jobs]:(Array.isArray(jobs)?[...jobs]:(jobs?[jobs]:[]));
+  const job=jobs[0]||"";
+  return {stu:sid||null, job, jobs, note:"", d:TODAY, hist:[], assist:null, prompts:{I:0,G:0,V:0,M:0,P:0}, types:new Set(ui.types[job]||["ct"]), skills:new Set(ui.skills[job]||[]),
      c:0, t:5, v:"", rating:0, done:null, sp:{}, touched:new Set(),
      beh:{}, ot:{on:0,off:0}, otNext:ui.otEvery?Date.now()+ui.otEvery*60000:null, otDue:false, engage:0, abc:{a:"",b:"",c:""},
      tm:{task:{acc:0,st:null}, lat:{acc:0,st:null}}, errs:{}, items:"", mins:"", brk:0, workMin:"", setting:ui.setting||null, editBeh:false, editErr:false, pic:null, dur:grp.on&&grp.dur?grp.dur:"", sup:""};
@@ -734,12 +743,12 @@ function openStudent(sid){
   if(editId) stopEditing();
   stash();
   F=drafts[sid]||newDraft(sid);
-  if(F.job!==ui.job){ ui.job=F.job; remember(); }
+  if((F.jobs||[]).join("|")!==ui.jobs.join("|")) setSel(F.jobs||[]);
   syncInputs(); setMsg("");
 }
 const DKEY="jst.drafts.v1";
 function packDraft(X){ return {...X, types:[...X.types], skills:[...X.skills], touched:[...X.touched]}; }
-function unpackDraft(o){ const X={...newDraft(o.stu,o.job),...o}; X.types=new Set(o.types||[]); X.skills=new Set(o.skills||[]); X.touched=new Set(o.touched||[]); X.hist=o.hist||[]; return X; }
+function unpackDraft(o){ const X={...newDraft(o.stu,o.jobs||o.job),...o}; if(!Array.isArray(X.jobs)) X.jobs=X.job?[X.job]:[]; X.types=new Set(o.types||[]); X.skills=new Set(o.skills||[]); X.touched=new Set(o.touched||[]); X.hist=o.hist||[]; return X; }
 let draftTimer=null;
 function saveDraftsSoon(){ clearTimeout(draftTimer); draftTimer=setTimeout(saveDrafts,300); }
 function saveDrafts(){
@@ -756,8 +765,15 @@ window.addEventListener("pagehide",saveDrafts);
 loadDrafts();
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") saveDrafts(); });
 
-const allJobs=()=>[...BASE_JOBS, ...M.customJobs.map(j=>[j.id,j.name])];
-const jobName=k=>!k?"No job":(allJobs().find(j=>j[0]===k)||[k,"Removed job"])[1];
+const allJobsFull=()=>[...BASE_JOBS, ...M.customJobs.map(j=>[j.id,j.name])];
+const allJobs=()=>allJobsFull().filter(([k])=>!(M.lists.hiddenJobs||[]).includes(k));
+/* an entry can list several jobs: e.j is the first one, e.jobs holds them all */
+const entryJobs=e=>e&&e.jobs&&e.jobs.length?e.jobs:(e&&e.j?[e.j]:[]);
+const jobsText=(ids,fallback)=>ids.length?ids.map(k=>{ const n=jobName(k); return n==="Removed job"&&fallback?fallback:n; }).join(" + "):"No job";
+const entryJobsText=e=>{ const ids=entryJobs(e); if(!ids.length) return "No job"; const parts=(e.jn||"").split(" + "); return ids.map((k,i)=>{ const n=jobName(k); return n==="Removed job"?(parts[i]||parts[0]||n):n; }).join(" + "); };
+const jobMatch=(e,sel)=>{ sel=sel||ui.jobs; return !sel.length||entryJobs(e).some(j=>sel.includes(j)); };
+function setSel(arr){ ui.jobs=[...new Set(arr.filter(Boolean))]; ui.job=ui.jobs[0]||""; remember(); }
+const jobName=k=>!k?"No job":(allJobsFull().find(j=>j[0]===k)||[k,"Removed job"])[1];
 const allSkills=()=>[...BASE_SKILLS, ...M.customSkills];
 const stuById=id=>M.students.find(s=>s.id===id);
 const entriesFor=(sid)=>[...M.entries, ...(mode==="db"?pending.filter(p=>!M.entries.some(e=>e.id===p.id)):[])].filter(e=>e.sid===sid);
@@ -793,12 +809,20 @@ function renderMode(){
   $("dlBackup").hidden = inClaude && !dls;
 }
 function renderPickers(){
-  if(ui.job&&!allJobs().some(j=>j[0]===ui.job)) ui.job="";
-  $("jobs").innerHTML=allJobs().map(([k,n])=>`<button type="button" class="chip" data-job="${esc(k)}" aria-pressed="${ui.job===k}">${esc(n)}</button>`).join("")
-    +`<button type="button" class="chip add" data-open="addJobForm" data-focus="newJob">+ Other job</button>`;
-  $("jobHint").textContent=ui.job?"Tap the highlighted job again to log without a job.":"No job picked. Entries save as \u201cNo job\u201d. You can add the job later with Edit.";
-  const isCustom=M.customJobs.some(j=>j.id===ui.job);
-  $("jobTools").innerHTML=isCustom?`<button type="button" class="link" data-rmjob="1">Remove “${esc(jobName(ui.job))}” from the job list</button>`:"";
+  const shown=allJobs().map(j=>j[0]);
+  if(ui.jobs.some(k=>!shown.includes(k))) setSel(ui.jobs.filter(k=>shown.includes(k)));
+  $("jobs").innerHTML=(ui.editJobs
+      ? allJobs().map(([k,n])=>`<span class="chip edj">${esc(n)}<button type="button" class="rmj" data-deljob="${esc(k)}" aria-label="Delete ${esc(n)} from the job list">✕</button></span>`).join("")
+      : allJobs().map(([k,n])=>`<button type="button" class="chip" data-job="${esc(k)}" aria-pressed="${ui.jobs.includes(k)}">${ui.jobs.includes(k)?'<span class="ck">✓</span>':""}${esc(n)}</button>`).join("")
+        +`<button type="button" class="chip add" data-open="addJobForm" data-focus="newJob">+ Other job</button>`)
+    +`<button type="button" class="link" data-editjobs="1">${ui.editJobs?"Done":"Edit job list"}</button>`;
+  const hid=(M.lists.hiddenJobs||[]).length;
+  $("jobHint").innerHTML=ui.editJobs
+    ? `Tap ✕ to delete a job from the list. Entries already saved keep their job name.${hid?` <button type="button" class="link" data-restorejobs="1">Bring back ${hid} deleted starter job${hid>1?"s":""}</button>`:""}`
+    : ui.jobs.length>1?`${ui.jobs.length} jobs picked. The entry lists all of them. Tap a job again to unpick it.`
+    : ui.jobs.length?"Tap another job to add it, or tap the picked job again to unpick it."
+    : "No job picked. Entries save as \u201cNo job\u201d. You can add the job later with Edit.";
+  $("jobTools").innerHTML="";
   if(M.classes.length && ui.cls!=="__all" && !M.classes.includes(ui.cls)) ui.cls=M.classes[0];
   $("classes").innerHTML=(M.classes.length?`<button type="button" class="chip sm allcls" data-cls="__all" aria-pressed="${ui.cls==="__all"}">All classes</button>`:"")
     +M.classes.map(c=>`<button type="button" class="chip sm" data-cls="${esc(c)}" aria-pressed="${ui.cls===c}">${esc(c)}</button>`).join("")
@@ -810,7 +834,7 @@ function renderStudents(){
   const list=allC?M.students:M.students.filter(s=>s.cls===ui.cls);
   if(!list.length){ $("students").innerHTML=`<div class="empty">No students in this classroom yet. Add them in Classes &amp; data.</div>`; return; }
   const card=s=>{
-    const n=entriesFor(s.id).filter(e=>(!ui.job||e.j===ui.job)&&e.d===TODAY).length;
+    const n=entriesFor(s.id).filter(e=>jobMatch(e)&&e.d===TODAY).length;
     const live=(s.id===F.stu&&!editId)?hasData(F):hasData(drafts[s.id]);
     const pressed=grp.on?grp.sids.includes(s.id):F.stu===s.id;
     return `<button type="button" class="stu${grp.on&&pressed?" ingrp":""}" data-stu="${esc(s.id)}" aria-pressed="${pressed}"><span class="nm">${esc(s.name)}</span><span class="meta">${s.ot?'<span class="ot">OT</span>':""}${live?'<span class="draft">● In progress</span>':""}${n?`<span class="done">✓ ${n} today</span>`:""}</span></button>`;
@@ -824,7 +848,9 @@ function renderPanel(){
   $("panel").hidden=!s;
   if(!s) return;
   $("pName").textContent=s.name;
-  $("pJob").innerHTML=`<option value=""${!F.job?" selected":""}>No job</option>`+allJobs().map(([k,n])=>`<option value="${esc(k)}"${k===F.job?" selected":""}>${esc(n)}</option>`).join("");
+  const fj=F.jobs||[];
+  $("pJobs").innerHTML=[...allJobs(), ...fj.filter(k=>!allJobs().some(j=>j[0]===k)).map(k=>[k,jobName(k)])].map(([k,n])=>`<button type="button" class="chip sm" data-pjob="${esc(k)}" aria-pressed="${fj.includes(k)}">${fj.includes(k)?'<span class="ck">✓</span>':""}${esc(n)}</button>`).join("")
+    +(fj.length?"":`<span class="sub" style="font-size:13px">No job</span>`);
   $("pCtx").textContent=s.cls;
   $("skills").innerHTML=allSkills().map(k=>`<button type="button" class="chip sm" data-skill="${esc(k)}" aria-pressed="${F.skills.has(k)}"><span class="ck">${F.skills.has(k)?"✓":""}</span>${esc(k)}</button>`).join("")
     +`<button type="button" class="chip sm add" data-open="addSkillForm" data-focus="newSkill">+ Add skill</button>`;
@@ -937,7 +963,7 @@ function renderRecent(){
   const item=e=>{
     const bits=resultBits(e), sk=(e.skills||[]).join(", ");
     return `<div class="ent${e.id===editId?" editing":""}"><span class="ptags">${ptags(e.prompts)||'<span class="tag none" title="No prompts counted">–</span>'}</span>
-      <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))}${allC&&!st?" · "+esc(e.cls):""}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
+      <span class="who">${esc(e.name)}<small>${esc(entryJobsText(e))}${allC&&!st?" · "+esc(e.cls):""}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
       <span class="num res">${bits.map(esc).join("<br>")||(e.note?"<small>Note</small>":"")}</span>
       <span class="acts"><button type="button" class="x" data-note="${esc(e.sid)}|${esc(e.id)}">Write note</button><button type="button" class="x" data-edit="${esc(e.sid)}|${esc(e.id)}">Edit</button><button type="button" class="x" data-del="${esc(e.sid)}|${esc(e.id)}">Delete</button></span></div>`;
   };
@@ -948,15 +974,15 @@ function renderRecent(){
     : `<div class="empty">${day?`No entries on ${nice(day)}.`:st?`No entries for ${esc(st.name)} yet.`:"No entries yet. Tap a student above, fill in what you saw, then Save entry."}</div>`;
 }
 function renderProg(){
-  const allC=ui.cls==="__all", list=allC?M.students:M.students.filter(s=>s.cls===ui.cls), all=!!ui.progAll||!ui.job;
-  $("pvJob").hidden=!ui.job;
+  const allC=ui.cls==="__all", list=allC?M.students:M.students.filter(s=>s.cls===ui.cls), all=!!ui.progAll||!ui.jobs.length;
+  $("pvJob").hidden=!ui.jobs.length;
   $("pvJob").setAttribute("aria-pressed",String(!all)); $("pvAll").setAttribute("aria-pressed",String(all));
-  $("pvJob").textContent=jobName(ui.job);
+  $("pvJob").textContent=ui.jobs.length>1?`Picked jobs (${ui.jobs.length})`:jobName(ui.job);
   const where=allC?"all classes":(ui.cls||"");
-  $("progLbl").textContent=all?`Every session so far, all jobs, ${where}`:`Every session so far, ${jobName(ui.job)}, ${where}`;
+  $("progLbl").textContent=all?`Every session so far, all jobs, ${where}`:`Every session so far, ${jobsText(ui.jobs)}, ${where}`;
   $("thJobs").hidden=!all;
   $("prog").innerHTML=list.map(s=>{
-    const es=entriesFor(s.id).filter(e=>all||e.j===ui.job).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0));
+    const es=entriesFor(s.id).filter(e=>all||jobMatch(e)).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0));
     const acc=es.map(accOf).filter(v=>v!==null);
     const pc=acc.length?Math.round(acc.reduce((a,b)=>a+b,0)/acc.length):null;
     const rs=es.map(e=>e.scores&&e.scores.rating).filter(Boolean);
@@ -967,7 +993,7 @@ function renderProg(){
     const la=[...es].reverse().find(e=>e.assist);
     const ots=es.map(e=>e.beh&&e.beh.ontask).filter(Boolean), otOn=ots.reduce((a,o)=>a+o.on,0), otAll=ots.reduce((a,o)=>a+o.on+o.off,0);
     let mix="";
-    if(all){ const by={}; es.forEach(e=>{ (by[e.j]=by[e.j]||[]).push(e); });
+    if(all){ const by={}; es.forEach(e=>{ (entryJobs(e).length?entryJobs(e):[""]).forEach(j=>{ (by[j]=by[j]||[]).push(e); }); });
       mix=Object.entries(by).map(([j,list2])=>{ const a=list2.map(accOf).filter(v=>v!==null); return `<span>${esc(jobName(j)==="Removed job"?(list2[0].jn||"Removed job"):jobName(j))} ${list2.length}${a.length?` · ${Math.round(a.reduce((x,y)=>x+y,0)/a.length)}%`:""}</span>`; }).join(""); }
     return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}${allC?`<small class="pcls">${esc(s.cls)}</small>`:""}</td><td class="c num">${es.length||"–"}</td>${all?`<td><div class="jobmix">${mix||'<span style="background:none;color:var(--mut)">–</span>'}</div></td>`:""}
       <td class="num">${pc===null?"–":pc+"%"}${pc===null?"":`<span class="bar"><i style="width:${pc}%"></i></span>`}</td>
@@ -1022,11 +1048,21 @@ document.addEventListener("click",async ev=>{
   else if(d.pview){ ui.progAll=d.pview==="all"; remember(); renderProg(); }
   else if(d.open){ $(d.open).hidden=false; $(d.focus).focus(); }
   else if(d.close){ $(d.close).hidden=true; }
-  else if(d.rmjob){ if(!arm(b,b.textContent,"Tap again to remove this job")) return;
-    M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job=""; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
-  else if(d.job!==undefined){ ui.job=d.job===ui.job?"":d.job; remember();
-    if(F&&F.stu&&(editId||hasData(F))){ const m=moveDraftToJob(F,ui.job); if(m) $("jobMsg").textContent=m; } else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
-    if(grp.on) groupSetJob(ui.job);
+  else if(d.editjobs){ ui.editJobs=!ui.editJobs; renderPickers(); }
+  else if(d.restorejobs){ M.lists={...M.lists,hiddenJobs:[]}; await guarded(saveLists,"Couldn't bring the jobs back."); renderAll(); }
+  else if(d.deljob){
+    const k=d.deljob, nm=jobName(k);
+    if(!arm(b,"✕","Delete?")) return;
+    if(M.customJobs.some(j=>j.id===k)){ M.customJobs=M.customJobs.filter(j=>j.id!==k); await guarded(saveJobs,"Couldn't delete the job."); }
+    else { M.lists={...M.lists,hiddenJobs:[...new Set([...(M.lists.hiddenJobs||[]),k])]}; await guarded(saveLists,"Couldn't delete the job."); }
+    setSel(ui.jobs.filter(x=>x!==k));
+    Object.values(drafts).forEach(X=>{ if(X&&(X.jobs||[]).includes(k)) setDraftJobs(X,X.jobs.filter(x=>x!==k)); });
+    if(F&&(F.jobs||[]).includes(k)) setDraftJobs(F,F.jobs.filter(x=>x!==k));
+    renderAll(); $("jobHint").insertAdjacentHTML("afterbegin",`<b>Deleted ${esc(nm)}.</b> `);
+  }
+  else if(d.job!==undefined){ setSel(ui.jobs.includes(d.job)?ui.jobs.filter(x=>x!==d.job):[...ui.jobs,d.job]);
+    if(F&&F.stu&&(editId||hasData(F))){ const m=setDraftJobs(F,ui.jobs); if(m) $("jobMsg").textContent=m; } else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
+    if(grp.on) groupSetJob(ui.jobs);
     renderAll(); }
   else if(d.cls){ ui.cls=d.cls; F.stu=null; remember(); renderAll(); }
   else if(d.stu){
@@ -1060,9 +1096,11 @@ document.addEventListener("click",async ev=>{
 $("rmClass").onclick=async ev=>{ const b=ev.currentTarget; if(!arm(b,"Remove this empty classroom","Tap again to remove it")) return;
   M.classes=M.classes.filter(c=>c!==ui.manCls); ui.manCls=null; await guarded(saveRoster,"Couldn't remove the classroom."); renderAll(); };
 $("fnote").addEventListener("input",()=>{ F.note=$("fnote").value; updSave(); });
-$("pJob").addEventListener("change",()=>{
-  const m=moveDraftToJob(F,$("pJob").value); ui.job=F.job; remember();
-  renderAll(); $("jobMsg").textContent=m; saveDraftsSoon();
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest("button[data-pjob]"); if(!b||!F) return;
+  const k=b.dataset.pjob, cur=F.jobs||[];
+  const m=setDraftJobs(F,cur.includes(k)?cur.filter(x=>x!==k):[...cur,k]); setSel(F.jobs);
+  renderAll(); if(m) $("jobMsg").textContent=m; saveDraftsSoon();
 });
 $("dayPick").addEventListener("change",renderRecent);
 $("dayClear").onclick=()=>{ $("dayPick").value=""; renderRecent(); };
@@ -1086,10 +1124,12 @@ function onForm(id,fn){ $(id).addEventListener("submit",ev=>{ ev.preventDefault(
 onForm("addJobForm",async()=>{
   const name=$("newJob").value.trim().replace(/\s+/g," "); if(!name) return;
   const hit=allJobs().find(j=>j[1].toLowerCase()===name.toLowerCase());
-  if(hit) ui.job=hit[0];
-  else { const id=uid("c"); M.customJobs=[...M.customJobs,{id,name}]; ui.job=id; await guarded(saveJobs,"Couldn't add the job."); }
-  $("newJob").value=""; $("addJobForm").hidden=true; remember();
-  if(F&&F.stu&&!editId&&hasData(F)) F.job=ui.job; else { F=newDraft(F&&F.stu); syncInputs(); }
+  let id;
+  if(hit) id=hit[0];
+  else { id=uid("c"); M.customJobs=[...M.customJobs,{id,name}]; await guarded(saveJobs,"Couldn't add the job."); }
+  setSel([...ui.jobs.filter(x=>x!==id),id]);
+  $("newJob").value=""; $("addJobForm").hidden=true;
+  if(F&&F.stu&&(editId||hasData(F))) setDraftJobs(F,ui.jobs); else { F=newDraft(F&&F.stu); syncInputs(); }
   renderAll();
 });
 onForm("addSkillForm",async()=>{
@@ -1117,25 +1157,34 @@ onForm("addStudentForm",async()=>{
   $("dmsg").textContent=`Added ${name} to ${ui.manCls}.`; $("newStudent").value=""; $("newOT").checked=false; renderAll(); $("newStudent").focus();
 });
 
+function setDraftJobs(X,jobs){
+  jobs=[...new Set(jobs.filter(Boolean))];
+  if(!X) return "";
+  const same=(X.jobs||[]).join("|")===jobs.join("|");
+  const m=moveDraftToJob(X,jobs[0]||""); X.jobs=jobs;
+  if(same) return "";
+  return m.replace(/^Moved to [^.]*\./,`Job${jobs.length>1?"s":""} for this entry: ${jobsText(jobs)}.`)||`Job${jobs.length>1?"s":""} for this entry: ${jobsText(jobs)}. Everything you entered was kept.`;
+}
 function moveDraftToJob(X,job){
   if(!X||X.job===job) return "";
   const oldSteps=M.steps[X.job]||[], newSteps=M.steps[job]||[], had=Object.keys(X.sp).length;
   const sp={}; let kept=0;
   Object.entries(X.sp).forEach(([i,v])=>{ const nm=oldSteps[+i]; const j=newSteps.findIndex(n=>n.toLowerCase()===String(nm||"").toLowerCase()); if(j>=0){ sp[j]=v; kept++; } });
   X.sp=sp; X.job=job;
-  return had&&kept<had?`Moved to ${jobName(job)}. Step scores that don't match ${jobName(job)}'s steps were cleared; everything else was kept.`:`Moved to ${jobName(job)}. Everything you entered was kept.`;
+  return had&&kept<had?`Moved to ${jobName(job)}. Step scores that don't match ${job?jobName(job)+"'s":"the new"} steps were cleared; everything else was kept.`:`Moved to ${jobName(job)}. Everything you entered was kept.`;
 }
 function buildEntry(X,orig){
   return withF(X,()=>{
-    const s=stuById(F.stu), job=F.job, scores={};
+    const s=stuById(F.stu), job=F.job, jobs=(F.jobs&&F.jobs.length?F.jobs:(F.job?[F.job]:[])), scores={};
     if(used("ct")) scores.ct={c:F.c,t:F.t};
     if(used("pct")) scores.pct=Math.round(+F.v*10)/10;
     if(used("rating")) scores.rating=F.rating;
     if(used("steps")) scores.steps=(M.steps[job]||[]).map((n,i)=>({n,ok:STEP_OK.includes(F.sp[i]),p:F.sp[i]||""}));
     if(used("done")) scores.done=F.done;
-    const e={id:orig?orig.id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:F.d||TODAY, j:job, jn:jobName(job), at:orig?orig.at:Date.now(),
+    const e={id:orig?orig.id:uid("e"), sid:s.id, name:s.name, cls:s.cls, d:F.d||TODAY, j:jobs[0]||"", jn:jobsText(jobs), at:orig?orig.at:Date.now(),
              skills:[...F.skills], prompts:{...F.prompts}, scores};
     if(orig) e.edited=Date.now();
+    if(jobs.length>1) e.jobs=[...jobs];
     if(F.assist) e.assist=F.assist;
     Object.assign(e, collectExtras());
     const note=(F.note||"").trim(); if(note) e.note=note;
@@ -1161,16 +1210,16 @@ $("save").onclick=async()=>{
 /* ================= group session ================= */
 function getG(sid){
   if(F&&F.stu===sid&&!editId){ drafts[sid]=F; return F; }
-  if(!drafts[sid]) drafts[sid]=newDraft(sid,grp.job||ui.job);
+  if(!drafts[sid]) drafts[sid]=newDraft(sid,grp.jobs||ui.jobs);
   return drafts[sid];
 }
 function groupToggle(sid){
   if(grp.sids.includes(sid)){ grp.sids=grp.sids.filter(x=>x!==sid); $("gmsg").textContent=hasData(drafts[sid])?`${stuById(sid).name} left the group. Their unsaved work is kept as a draft.`:""; }
   else if(grp.sids.length>=6){ $("gmsg").textContent="A group can have up to 6 students. Remove one first."; return; }
-  else { grp.sids=[...grp.sids,sid]; const X=getG(sid); if(!hasData(X)) X.job=grp.job; }
+  else { grp.sids=[...grp.sids,sid]; const X=getG(sid); if(!hasData(X)) setDraftJobs(X,grp.jobs||[]); }
   renderStudents(); renderGroup(); saveDraftsSoon();
 }
-function groupSetJob(job){ grp.job=job; grp.sids.forEach(sid=>{ getG(sid).job=job; }); }
+function groupSetJob(jobs){ grp.jobs=[...jobs]; grp.job=jobs[0]||""; grp.sids.forEach(sid=>{ setDraftJobs(getG(sid),grp.jobs); }); }
 function gSummary(X){
   const pt=ptotal(X.prompts), a=X.ot.on+X.ot.off, b=Object.values(nz(X.beh)).reduce((x,y)=>x+y,0), bits=[];
   if(X.assist) bits.push(assistName(X.assist));
@@ -1183,7 +1232,7 @@ function gSummary(X){
 function renderGroup(){
   const box=$("groupBox"); box.hidden=!grp.on; $("grpStart").hidden=grp.on;
   if(!grp.on) return;
-  $("gTitle").textContent=`Group session · ${jobName(grp.job||ui.job)}`;
+  $("gTitle").textContent=`Group session · ${jobsText(grp.jobs||ui.jobs)}`;
   if(document.activeElement!==$("gDur")) $("gDur").value=grp.dur||"";
   const n=grp.sids.length, live=grp.sids.filter(sid=>hasData(getG(sid))).length;
   $("gHelp").textContent=n?`${n} student${n>1?"s":""}. Tap names above to add or remove (up to 6). Use More details for scores, steps and notes.`:"Tap students above to add them to the group (up to 6).";
@@ -1244,7 +1293,7 @@ $("gDur").addEventListener("input",()=>{
   renderGroup(); saveDraftsSoon();
 });
 $("grpStart").onclick=()=>{
-  grp.on=true; grp.job=ui.job; grp.sids=[];
+  grp.on=true; grp.jobs=[...ui.jobs]; grp.job=ui.job; grp.sids=[];
   if(F&&F.stu&&!editId){ stash(); grp.sids=[F.stu]; }
   F=newDraft(null); syncInputs(); setMsg("");
   renderAll(); saveDraftsSoon(); $("groupBox").scrollIntoView({behavior:"smooth",block:"start"});
@@ -1262,7 +1311,7 @@ $("gSaveAll").onclick=async()=>{
     const pr=withF(X,problems); if(pr.length){ bad.push(`${s.name} (${pr[0]})`); continue; }
     try{
       const how=await addEntry(buildEntry(X,null)); saved++; if(how==="queued") queued++;
-      const fresh=newDraft(sid,grp.job); fresh.setting=X.setting; drafts[sid]=fresh; if(F===X){ F=fresh; syncInputs(); }
+      const fresh=newDraft(sid,grp.jobs||[]); fresh.setting=X.setting; drafts[sid]=fresh; if(F===X){ F=fresh; syncInputs(); }
     }catch(e){ fail.push(s.name); }
   }
   btn.disabled=false;
@@ -1281,11 +1330,11 @@ const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
 const joinAnd=a=>a.length<2?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
 const PNAME={I:"independent",G:"gestural",V:"verbal",M:"model",P:"physical"};
 function writeNote(e){
-  const first=(e.name||"The student").split(" ")[0], job=!e.j?"":(jobName(e.j)==="Removed job"?(e.jn||"a job"):jobName(e.j)).toLowerCase();
+  const first=(e.name||"The student").split(" ")[0], ejs=entryJobs(e), jobNames=ejs.length?entryJobsText(e).split(" + ").map(x=>x.toLowerCase()):[], job=joinAnd(jobNames);
   const sk=(e.skills||[]).map(x=>x.toLowerCase()), sc=e.scores||{}, p=e.prompts||{}, b=e.beh||{};
   const out=[];
   // 1. task
-  let t=`During a vocational session${e.setting?` in the ${e.setting.toLowerCase()}`:""}, ${first} completed ${job?`the ${job} task`:"a work task"}`;
+  let t=`During a vocational session${e.setting?` in the ${e.setting.toLowerCase()}`:""}, ${first} completed ${job?`the ${job} task${jobNames.length>1?"s":""}`:"a work task"}`;
   if(sk.length) t+=`, targeting ${joinAnd(sk)}`;
   if(e.dur>0) t+=` over a ${e.dur}-minute session`;
   out.push(t+".");
@@ -1319,9 +1368,9 @@ function writeNote(e){
   if(pf.length) out.push(`${first} ${joinAnd(pf)}.`);
   if(b.abc&&(b.abc.a||b.abc.b)) out.push(`An incident occurred: ${b.abc.a||"(antecedent not recorded)"}; ${first} ${b.abc.b?b.abc.b.charAt(0).toLowerCase()+b.abc.b.slice(1):"(behavior not recorded)"}; ${b.abc.c||"(response not recorded)"}.`.replace(/\.;/g,";").replace(/\.\./g,"."));
   // 4. interpretation (compares with the last session of the same job)
-  const acc=accOf(e), prev=sortedEntries().filter(x=>x.sid===e.sid&&x.j===e.j&&x.id!==e.id&&(x.d<e.d||(x.d===e.d&&(x.at||0)<(e.at||0)))).sort((a,b2)=>a.d<b2.d?1:a.d>b2.d?-1:(b2.at||0)-(a.at||0))[0];
+  const acc=accOf(e), prev=sortedEntries().filter(x=>x.sid===e.sid&&(entryJobs(x).some(j=>ejs.includes(j))||(!ejs.length&&!entryJobs(x).length))&&x.id!==e.id&&(x.d<e.d||(x.d===e.d&&(x.at||0)<(e.at||0)))).sort((a,b2)=>a.d<b2.d?1:a.d>b2.d?-1:(b2.at||0)-(a.at||0))[0];
   const lvl=e.assist?ASSIST.findIndex(a=>a[0]===e.assist):-1;
-  const target=sk.length?joinAnd(sk):(job?`the ${job} task`:"the task");
+  const target=sk.length?joinAnd(sk):(job?`the ${job} task${jobNames.length>1?"s":""}`:"the task");
   const most=PROMPTS.filter(([k])=>k!=="I"&&p[k]).sort((a,b2)=>p[b2[0]]-p[a[0]])[0];
   let it;
   if((acc!==null&&acc>=80)&&(lvl<0||lvl<=2)) it=`Performance indicates emerging independence with ${target}; recommend fading support and monitoring for consistency across sessions.`;
@@ -1447,9 +1496,9 @@ function studentSection(w,s,es,meta){
   w.para(`${meta}  -  Sessions: ${st.n}`,10,PT.mut);
   if(!es.length){ w.para("No sessions logged for this period.",11,PT.ink); return; }
   w.heading("Summary by job");
-  const jobs=[...new Set(st.sorted.map(e=>e.j))];
+  const jobs=[...new Set(st.sorted.flatMap(e=>entryJobs(e).length?entryJobs(e):[""]))];
   w.table([{h:"Job",w:100,bold:true},{h:"Sessions",w:52},{h:"Accuracy",w:56},{h:"Avg rating",w:58},{h:"Latest assistance",w:96},{h:"Prompts given (total)",w:106},{h:"Per session",w:64}],
-    jobs.map(j=>{ const x=statsOf(st.sorted.filter(e=>e.j===j)); return [jobName(j)==="Removed job"?(st.sorted.find(e=>e.j===j).jn||"Removed job"):jobName(j), String(x.n), x.acc, x.rating, x.assist, x.prompts, x.pps]; }));
+    jobs.map(j=>{ const inJ=st.sorted.filter(e=>j?entryJobs(e).includes(j):!entryJobs(e).length), x=statsOf(inJ); return [jobName(j)==="Removed job"?(entryJobsText(inJ[0]).split(" + ")[entryJobs(inJ[0]).indexOf(j)]||"Removed job"):jobName(j), String(x.n), x.acc, x.rating, x.assist, x.prompts, x.pps]; }));
   const hb=habitsOf(st.sorted);
   if(hb.length){ w.heading("Behavior and work habits"); w.table([{h:"Measure",w:170,bold:true},{h:"Result",w:362}], hb); }
   w.heading("Session log");
@@ -1457,7 +1506,7 @@ function studentSection(w,s,es,meta){
     st.sorted.map(e=>{
       const sk=(e.skills||[]).join(", ");
       const notes=[sk?"Skills: "+sk:"", ...extraLines(e,false), e.note?"Note: "+e.note:""].filter(Boolean).join("\n");
-      return [nice(e.d), jobName(e.j)==="Removed job"?(e.jn||"Removed job"):jobName(e.j), e.assist?assistName(e.assist):"-", promptShort(e.prompts)||"-", resultBits(e).join("\n")||"-", notes||"-"];
+      return [nice(e.d), entryJobsText(e), e.assist?assistName(e.assist):"-", promptShort(e.prompts)||"-", resultBits(e).join("\n")||"-", notes||"-"];
     }));
 }
 async function buildPdf(){
@@ -1481,7 +1530,7 @@ async function buildPdf(){
     const period=from||to?`${from?nice(from):"Start"} to ${to?nice(to):"today"}`:"All dates";
     const jobTxt=job==="__all"?"All jobs":jobName(job);
     const meta=`${period}  -  ${jobTxt}`;
-    const pick=s=>M.entries.filter(e=>e.sid===s.id&&(job==="__all"||e.j===job)&&(!from||e.d>=from)&&(!to||e.d<=to));
+    const pick=s=>M.entries.filter(e=>e.sid===s.id&&(job==="__all"||entryJobs(e).includes(job))&&(!from||e.d>=from)&&(!to||e.d<=to));
     if(sid!=="__all"){
       const s=stuById(sid); title=`Job skills report - ${s.name}`; fname=`job-skills-${s.name}`;
       studentSection(w,s,pick(s),meta);
@@ -1518,7 +1567,7 @@ $("dlPdf").onclick=async()=>{
   b.disabled=false;
 };
 $("progPdf").onclick=()=>{
-  $("rType").value="data"; fillReportPickers(false); $("rCls").value=ui.cls||"__all"; fillReportPickers(true); $("rJob").value=ui.job||"__all";
+  $("rType").value="data"; fillReportPickers(false); $("rCls").value=ui.cls||"__all"; fillReportPickers(true); $("rJob").value=ui.jobs.length===1?ui.job:"__all";
   setView("man"); $("reports").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
@@ -1733,7 +1782,7 @@ function csvText(){
   const head=["Date","Student","Class","OT","Job","Skills scored","Assistance level","Session length (min)","Support min (low)","Support min (high)","Actual support (min)","Independent","Gestural","Verbal","Model","Physical","Total prompts","Picture support","Correct","Trials","Percent","Rating (1-5)","Steps done","Steps total","Done","Accuracy %","Setting","Behavior counts","On-task %","On-task checks","Engagement (1-5)","ABC","Task time (min)","Time to start (sec)","Items completed","Minutes worked","Items per minute","Breaks","Worked before first break (min)","Errors","Step prompts","Notes"];
   const rows=[...M.entries].sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0)).map(e=>{
     const sc=e.scores||{}, p=e.prompts||{}, st=stuById(e.sid), acc=accOf(e);
-    return [nice(e.d), e.name, e.cls, st?(st.ot?"OT":""):"", jobName(e.j)==="Removed job"?(e.jn||""):jobName(e.j), (e.skills||[]).join("; "), e.assist?assistName(e.assist):"", ...supCsv(e),
+    return [nice(e.d), e.name, e.cls, st?(st.ot?"OT":""):"", entryJobsText(e), (e.skills||[]).join("; "), e.assist?assistName(e.assist):"", ...supCsv(e),
       p.I||0,p.G||0,p.V||0,p.M||0,p.P||0,ptotal(p), typeof e.pic==="boolean"?(e.pic?"Yes":"No"):"",
       sc.ct?sc.ct.c:"", sc.ct?sc.ct.t:"", typeof sc.pct==="number"?sc.pct:"", sc.rating||"",
       sc.steps?sc.steps.filter(x=>x.ok).length:"", sc.steps?sc.steps.length:"", typeof sc.done==="boolean"?(sc.done?"Yes":"No"):"",
