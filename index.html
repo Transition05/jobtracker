@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Skills"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#1E6B62"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
-<script>window.APP_VERSION="1793050245";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
+<script>window.APP_VERSION="1793666617";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
 <title>Job Skills Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
@@ -215,6 +215,18 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.chip.allcls{border-style:dashed}
+.chip.allcls[aria-pressed="true"]{border-style:solid}
+.clsgrp{margin-top:10px}
+.clshead{font-family:var(--display); font-weight:600; font-size:16px; margin:12px 0 6px; color:var(--mut)}
+.rechead{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; margin:28px 0 8px}
+.recbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; font-weight:700; color:var(--mut)}
+.recbar .txt{height:40px; flex:none; width:auto}
+.dayhead{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin:14px 0 4px; padding-bottom:4px; border-bottom:2px solid var(--line); font-family:var(--display); font-weight:600; font-size:16px}
+.dayhead:first-child{margin-top:0}
+.dayhead small{font-family:var(--body); font-weight:400; font-size:13px; color:var(--mut)}
+.pcls{display:block; font-size:12px; color:var(--mut)}
+#moreRecent{margin-top:10px}
 .pjob{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; margin-top:4px}
 .pjob label{font-size:13px; font-weight:700; color:var(--mut)}
 .pjob .txt{flex:0 1 260px; height:40px}
@@ -357,6 +369,7 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
       <button class="btn ghost sm" type="button" data-close="addJobForm">Cancel</button>
     </form>
     <div id="jobTools"></div>
+    <p class="sub" id="jobHint" style="font-size:13px;margin:6px 0 0"></p>
     <div class="lbl">Class</div>
     <div class="chips" id="classes"></div>
   </div>
@@ -436,7 +449,8 @@ details.more>summary small{font-family:var(--body); font-weight:400; font-size:1
       <div class="msg" id="msg" aria-live="polite"></div>
     </div>
 
-    <div class="lbl" style="margin-top:28px" id="recentLbl">Latest entries</div>
+    <div class="rechead"><div class="lbl" style="margin:0" id="recentLbl">Latest entries</div>
+      <span class="recbar"><label for="dayPick">Go to date</label><input type="date" class="txt" id="dayPick"><button type="button" class="link" id="dayClear" hidden>Show all dates</button></span></div>
     <div class="list" id="recent"></div>
   </section>
 
@@ -655,7 +669,7 @@ async function updateEntry(e){
   M.entries=M.entries.map(x=>x.id===e.id?e:x); persistLocal(); return "saved";
 }
 function loadEntry(e){
-  stash(); ui.job=e.j; ui.cls=e.cls||ui.cls;
+  stash(); ui.job=e.j||""; ui.cls=ui.cls==="__all"?"__all":(e.cls||ui.cls);
   F=newDraft(e.sid,e.j); editId=e.id;
   const sc=e.scores||{};
   F.assist=e.assist||null; F.prompts={I:0,G:0,V:0,M:0,P:0,...(e.prompts||{})}; F.skills=new Set(e.skills||[]);
@@ -743,7 +757,7 @@ loadDrafts();
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") saveDrafts(); });
 
 const allJobs=()=>[...BASE_JOBS, ...M.customJobs.map(j=>[j.id,j.name])];
-const jobName=k=>(allJobs().find(j=>j[0]===k)||[k,"Removed job"])[1];
+const jobName=k=>!k?"No job":(allJobs().find(j=>j[0]===k)||[k,"Removed job"])[1];
 const allSkills=()=>[...BASE_SKILLS, ...M.customSkills];
 const stuById=id=>M.students.find(s=>s.id===id);
 const entriesFor=(sid)=>[...M.entries, ...(mode==="db"?pending.filter(p=>!M.entries.some(e=>e.id===p.id)):[])].filter(e=>e.sid===sid);
@@ -779,32 +793,38 @@ function renderMode(){
   $("dlBackup").hidden = inClaude && !dls;
 }
 function renderPickers(){
-  if(!allJobs().some(j=>j[0]===ui.job)) ui.job="coffee";
+  if(ui.job&&!allJobs().some(j=>j[0]===ui.job)) ui.job="";
   $("jobs").innerHTML=allJobs().map(([k,n])=>`<button type="button" class="chip" data-job="${esc(k)}" aria-pressed="${ui.job===k}">${esc(n)}</button>`).join("")
     +`<button type="button" class="chip add" data-open="addJobForm" data-focus="newJob">+ Other job</button>`;
+  $("jobHint").textContent=ui.job?"Tap the highlighted job again to log without a job.":"No job picked. Entries save as \u201cNo job\u201d. You can add the job later with Edit.";
   const isCustom=M.customJobs.some(j=>j.id===ui.job);
   $("jobTools").innerHTML=isCustom?`<button type="button" class="link" data-rmjob="1">Remove “${esc(jobName(ui.job))}” from the job list</button>`:"";
-  if(M.classes.length && !M.classes.includes(ui.cls)) ui.cls=M.classes[0];
-  $("classes").innerHTML=M.classes.map(c=>`<button type="button" class="chip sm" data-cls="${esc(c)}" aria-pressed="${ui.cls===c}">${esc(c)}</button>`).join("")
+  if(M.classes.length && ui.cls!=="__all" && !M.classes.includes(ui.cls)) ui.cls=M.classes[0];
+  $("classes").innerHTML=(M.classes.length?`<button type="button" class="chip sm allcls" data-cls="__all" aria-pressed="${ui.cls==="__all"}">All classes</button>`:"")
+    +M.classes.map(c=>`<button type="button" class="chip sm" data-cls="${esc(c)}" aria-pressed="${ui.cls===c}">${esc(c)}</button>`).join("")
     || `<span class="sub">No classrooms yet. Go to Classes &amp; data to restore your starter backup or add a classroom.</span>`;
 }
 function renderStudents(){
   if(!ready){ $("students").innerHTML=`<div class="empty">Loading your class lists…</div>`; return; }
-  const list=M.students.filter(s=>s.cls===ui.cls);
+  const allC=ui.cls==="__all";
+  const list=allC?M.students:M.students.filter(s=>s.cls===ui.cls);
   if(!list.length){ $("students").innerHTML=`<div class="empty">No students in this classroom yet. Add them in Classes &amp; data.</div>`; return; }
-  $("students").innerHTML=`<div class="grid">`+list.map(s=>{
-    const n=entriesFor(s.id).filter(e=>e.j===ui.job&&e.d===TODAY).length;
+  const card=s=>{
+    const n=entriesFor(s.id).filter(e=>(!ui.job||e.j===ui.job)&&e.d===TODAY).length;
     const live=(s.id===F.stu&&!editId)?hasData(F):hasData(drafts[s.id]);
     const pressed=grp.on?grp.sids.includes(s.id):F.stu===s.id;
     return `<button type="button" class="stu${grp.on&&pressed?" ingrp":""}" data-stu="${esc(s.id)}" aria-pressed="${pressed}"><span class="nm">${esc(s.name)}</span><span class="meta">${s.ot?'<span class="ot">OT</span>':""}${live?'<span class="draft">● In progress</span>':""}${n?`<span class="done">✓ ${n} today</span>`:""}</span></button>`;
-  }).join("")+`</div>`;
+  };
+  $("students").innerHTML=allC
+    ? M.classes.map(c=>{ const l=list.filter(s=>s.cls===c); return l.length?`<div class="clsgrp"><div class="clshead">${esc(c)}</div><div class="grid">${l.map(card).join("")}</div></div>`:""; }).join("")
+    : `<div class="grid">`+list.map(card).join("")+`</div>`;
 }
 function renderPanel(){
   const s=stuById(F.stu);
   $("panel").hidden=!s;
   if(!s) return;
   $("pName").textContent=s.name;
-  $("pJob").innerHTML=allJobs().map(([k,n])=>`<option value="${esc(k)}"${k===F.job?" selected":""}>${esc(n)}</option>`).join("");
+  $("pJob").innerHTML=`<option value=""${!F.job?" selected":""}>No job</option>`+allJobs().map(([k,n])=>`<option value="${esc(k)}"${k===F.job?" selected":""}>${esc(n)}</option>`).join("");
   $("pCtx").textContent=s.cls;
   $("skills").innerHTML=allSkills().map(k=>`<button type="button" class="chip sm" data-skill="${esc(k)}" aria-pressed="${F.skills.has(k)}"><span class="ck">${F.skills.has(k)?"✓":""}</span>${esc(k)}</button>`).join("")
     +`<button type="button" class="chip sm add" data-open="addSkillForm" data-focus="newSkill">+ Add skill</button>`;
@@ -850,6 +870,7 @@ function renderScore(){
     if(k==="rating") h=`<div class="rate">${[1,2,3,4,5].map(r=>`<button type="button" data-rate="${r}" aria-pressed="${F.rating===r}" aria-label="Rating ${r}">${r}</button>`).join("")}</div><div class="ends"><span>1 = needs a lot of help</span><span>5 = excellent</span></div>`;
     if(k==="steps"){
       const steps=M.steps[ui.job]||[];
+      if(!ui.job){ parts.push(`<div class="lbl">${n}</div><div class="empty">Pick a job to use a steps checklist. Each job keeps its own list of steps.</div>`); continue; }
       h=`<p class="sub" style="font-size:14px;margin:0 0 6px">For each step, tap the prompt the student needed (I = did it alone) or ✗ if the step wasn't done.</p><div class="steps">${steps.length?steps.map((t,i)=>`<div class="steprow2"><span class="t">${i+1}. ${esc(t)}</span><span class="stepp">${[...PROMPTS.map(x=>x[0]),"X"].map(k=>`<button type="button" data-sp="${k}" data-spi="${i}" aria-pressed="${F.sp[i]===k}" aria-label="${esc(t)}: ${k==="X"?"not done":PROMPTS.find(x=>x[0]===k)[1]}">${k==="X"?"✗":k}</button>`).join("")}</span><button type="button" class="link" data-rmstep="${i}">Remove</button></div>`).join("")
           :`<div class="empty">No steps yet for ${esc(jobName(ui.job))}. Add the job's steps below, in order. They're saved for next time.</div>`}
         <form class="addjob" id="addStepForm"><input class="txt" id="newStep" maxlength="80" placeholder="Add a step, e.g. Fill the water tank" aria-label="New step" autocomplete="off"><button class="btn ghost sm" type="submit">Add step</button></form>
@@ -896,23 +917,43 @@ function updSave(){
 function setMsg(t,err){ $("msg").textContent=t; $("msg").classList.toggle("err",!!err); }
 
 function sortedEntries(){ return [...M.entries, ...(mode==="db"?pending.filter(p=>!M.entries.some(e=>e.id===p.id)):[])].sort((a,b)=>(b.at||0)-(a.at||0)); }
+function dayHead(d){
+  const dt=new Date(d+"T12:00:00"), y=new Date(); y.setDate(y.getDate()-1);
+  const long=dt.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  return d===TODAY?`Today · ${long}`:d===iso(y)?`Yesterday · ${long}`:long;
+}
+let recentLimit=20;
 function renderRecent(){
-  const st=F&&F.stu?stuById(F.stu):null;
-  const rows=st?sortedEntries().filter(e=>e.sid===st.id).slice(0,60):sortedEntries().filter(e=>e.cls===ui.cls).slice(0,12);
-  $("recentLbl").textContent=st?`${st.name}'s entries (${sortedEntries().filter(e=>e.sid===st.id).length})`:"Latest entries";
-  $("recent").innerHTML=rows.length?rows.map(e=>{
+  const st=F&&F.stu?stuById(F.stu):null, allC=ui.cls==="__all", day=$("dayPick").value;
+  let pool=st?sortedEntries().filter(e=>e.sid===st.id):sortedEntries().filter(e=>allC||e.cls===ui.cls);
+  const scopeTxt=st?`${st.name}'s entries`:allC?"All classes":ui.cls||"";
+  if(day) pool=pool.filter(e=>e.d===day);
+  // newest date first, then newest saved first within a day
+  pool.sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:(b.at||0)-(a.at||0));
+  const rows=day?pool:pool.slice(0,st?60:recentLimit);
+  $("recentLbl").textContent=day?`${scopeTxt} · ${nice(day)} (${pool.length})`:`${scopeTxt} · newest first (${pool.length})`;
+  $("dayClear").hidden=!day;
+  const days=[...new Set(rows.map(e=>e.d))];
+  const item=e=>{
     const bits=resultBits(e), sk=(e.skills||[]).join(", ");
     return `<div class="ent${e.id===editId?" editing":""}"><span class="ptags">${ptags(e.prompts)||'<span class="tag none" title="No prompts counted">–</span>'}</span>
-      <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))} · ${nice(e.d)}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
+      <span class="who">${esc(e.name)}<small>${esc(jobName(e.j))}${allC&&!st?" · "+esc(e.cls):""}${sk?" · "+esc(sk):""}</small>${e.assist?`<span class="alvl">${esc(assistName(e.assist))}</span>`:""}${extraLines(e,true).length?`<span class="note">${esc(extraLines(e,true).join(" · "))}</span>`:""}${e.note?`<span class="note">${esc(e.note.length>160?e.note.slice(0,160)+"…":e.note)}</span>`:""}</span>
       <span class="num res">${bits.map(esc).join("<br>")||(e.note?"<small>Note</small>":"")}</span>
       <span class="acts"><button type="button" class="x" data-note="${esc(e.sid)}|${esc(e.id)}">Write note</button><button type="button" class="x" data-edit="${esc(e.sid)}|${esc(e.id)}">Edit</button><button type="button" class="x" data-del="${esc(e.sid)}|${esc(e.id)}">Delete</button></span></div>`;
-  }).join("") : `<div class="empty">${st?`No entries for ${esc(st.name)} yet.`:"No entries for this class yet. Tap a student above, fill in what you saw, then Save entry."}</div>`;
+  };
+  $("recent").innerHTML=rows.length
+    ? days.map(d=>{ const list=rows.filter(e=>e.d===d), total=pool.filter(e=>e.d===d).length;
+        return `<div class="dayhead"><span>${esc(dayHead(d))}</span><small>${total} entr${total===1?"y":"ies"}</small></div>${list.map(item).join("")}`; }).join("")
+      + (!day&&!st&&pool.length>rows.length?`<button type="button" class="btn ghost sm" id="moreRecent">Show more (${pool.length-rows.length} older)</button>`:"")
+    : `<div class="empty">${day?`No entries on ${nice(day)}.`:st?`No entries for ${esc(st.name)} yet.`:"No entries yet. Tap a student above, fill in what you saw, then Save entry."}</div>`;
 }
 function renderProg(){
-  const list=M.students.filter(s=>s.cls===ui.cls), all=!!ui.progAll;
+  const allC=ui.cls==="__all", list=allC?M.students:M.students.filter(s=>s.cls===ui.cls), all=!!ui.progAll||!ui.job;
+  $("pvJob").hidden=!ui.job;
   $("pvJob").setAttribute("aria-pressed",String(!all)); $("pvAll").setAttribute("aria-pressed",String(all));
   $("pvJob").textContent=jobName(ui.job);
-  $("progLbl").textContent=all?`Every session so far, all jobs, ${ui.cls||""}`:`Every session so far, ${jobName(ui.job)}, ${ui.cls||""}`;
+  const where=allC?"all classes":(ui.cls||"");
+  $("progLbl").textContent=all?`Every session so far, all jobs, ${where}`:`Every session so far, ${jobName(ui.job)}, ${where}`;
   $("thJobs").hidden=!all;
   $("prog").innerHTML=list.map(s=>{
     const es=entriesFor(s.id).filter(e=>all||e.j===ui.job).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:(a.at||0)-(b.at||0));
@@ -928,7 +969,7 @@ function renderProg(){
     let mix="";
     if(all){ const by={}; es.forEach(e=>{ (by[e.j]=by[e.j]||[]).push(e); });
       mix=Object.entries(by).map(([j,list2])=>{ const a=list2.map(accOf).filter(v=>v!==null); return `<span>${esc(jobName(j)==="Removed job"?(list2[0].jn||"Removed job"):jobName(j))} ${list2.length}${a.length?` · ${Math.round(a.reduce((x,y)=>x+y,0)/a.length)}%`:""}</span>`; }).join(""); }
-    return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}</td><td class="c num">${es.length||"–"}</td>${all?`<td><div class="jobmix">${mix||'<span style="background:none;color:var(--mut)">–</span>'}</div></td>`:""}
+    return `<tr><td>${esc(s.name)} ${s.ot?'<span class="ot">OT</span>':""}${allC?`<small class="pcls">${esc(s.cls)}</small>`:""}</td><td class="c num">${es.length||"–"}</td>${all?`<td><div class="jobmix">${mix||'<span style="background:none;color:var(--mut)">–</span>'}</div></td>`:""}
       <td class="num">${pc===null?"–":pc+"%"}${pc===null?"":`<span class="bar"><i style="width:${pc}%"></i></span>`}</td>
       <td class="c num">${ra}</td><td>${la?`<span class="alvl">${esc(assistName(la.assist))}</span>`:'<span style="color:var(--mut)">–</span>'}</td><td class="c num">${otAll?Math.round(otOn/otAll*100)+"%":"–"}</td><td class="c num">${pps}</td><td><div class="ptags">${ptags(tot)||'<span style="color:var(--mut)">–</span>'}</div></td><td>${last}</td></tr>`;
   }).join("") || `<tr><td colspan="10">No students in this classroom yet.</td></tr>`;
@@ -982,8 +1023,8 @@ document.addEventListener("click",async ev=>{
   else if(d.open){ $(d.open).hidden=false; $(d.focus).focus(); }
   else if(d.close){ $(d.close).hidden=true; }
   else if(d.rmjob){ if(!arm(b,b.textContent,"Tap again to remove this job")) return;
-    M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job="coffee"; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
-  else if(d.job){ ui.job=d.job; remember();
+    M.customJobs=M.customJobs.filter(j=>j.id!==ui.job); ui.job=""; remember(); await guarded(saveJobs,"Couldn't remove the job."); renderAll(); }
+  else if(d.job!==undefined){ ui.job=d.job===ui.job?"":d.job; remember();
     if(F&&F.stu&&(editId||hasData(F))){ const m=moveDraftToJob(F,ui.job); if(m) $("jobMsg").textContent=m; } else { const sid=F&&F.stu; F=newDraft(sid); syncInputs(); }
     if(grp.on) groupSetJob(ui.job);
     renderAll(); }
@@ -1023,6 +1064,9 @@ $("pJob").addEventListener("change",()=>{
   const m=moveDraftToJob(F,$("pJob").value); ui.job=F.job; remember();
   renderAll(); $("jobMsg").textContent=m; saveDraftsSoon();
 });
+$("dayPick").addEventListener("change",renderRecent);
+$("dayClear").onclick=()=>{ $("dayPick").value=""; renderRecent(); };
+document.addEventListener("click",ev=>{ if(ev.target.id==="moreRecent"){ recentLimit+=40; renderRecent(); } });
 $("fd").addEventListener("change",()=>{ F.d=$("fd").value||TODAY; });
 $("fDur").addEventListener("input",()=>{ F.dur=$("fDur").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
 $("fSup").addEventListener("input",()=>{ F.sup=$("fSup").value.replace(/[^\d.]/g,""); renderSupport(); updSave(); });
@@ -1237,11 +1281,11 @@ const plural=(n,w)=>`${n} ${w}${n===1?"":"s"}`;
 const joinAnd=a=>a.length<2?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
 const PNAME={I:"independent",G:"gestural",V:"verbal",M:"model",P:"physical"};
 function writeNote(e){
-  const first=(e.name||"The student").split(" ")[0], job=(jobName(e.j)==="Removed job"?(e.jn||"a job"):jobName(e.j)).toLowerCase();
+  const first=(e.name||"The student").split(" ")[0], job=!e.j?"":(jobName(e.j)==="Removed job"?(e.jn||"a job"):jobName(e.j)).toLowerCase();
   const sk=(e.skills||[]).map(x=>x.toLowerCase()), sc=e.scores||{}, p=e.prompts||{}, b=e.beh||{};
   const out=[];
   // 1. task
-  let t=`During a vocational session${e.setting?` in the ${e.setting.toLowerCase()}`:""}, ${first} completed the ${job} task`;
+  let t=`During a vocational session${e.setting?` in the ${e.setting.toLowerCase()}`:""}, ${first} completed ${job?`the ${job} task`:"a work task"}`;
   if(sk.length) t+=`, targeting ${joinAnd(sk)}`;
   if(e.dur>0) t+=` over a ${e.dur}-minute session`;
   out.push(t+".");
@@ -1277,7 +1321,7 @@ function writeNote(e){
   // 4. interpretation (compares with the last session of the same job)
   const acc=accOf(e), prev=sortedEntries().filter(x=>x.sid===e.sid&&x.j===e.j&&x.id!==e.id&&(x.d<e.d||(x.d===e.d&&(x.at||0)<(e.at||0)))).sort((a,b2)=>a.d<b2.d?1:a.d>b2.d?-1:(b2.at||0)-(a.at||0))[0];
   const lvl=e.assist?ASSIST.findIndex(a=>a[0]===e.assist):-1;
-  const target=sk.length?joinAnd(sk):`the ${job} task`;
+  const target=sk.length?joinAnd(sk):(job?`the ${job} task`:"the task");
   const most=PROMPTS.filter(([k])=>k!=="I"&&p[k]).sort((a,b2)=>p[b2[0]]-p[a[0]])[0];
   let it;
   if((acc!==null&&acc>=80)&&(lvl<0||lvl<=2)) it=`Performance indicates emerging independence with ${target}; recommend fading support and monitoring for consistency across sessions.`;
@@ -1474,7 +1518,7 @@ $("dlPdf").onclick=async()=>{
   b.disabled=false;
 };
 $("progPdf").onclick=()=>{
-  $("rType").value="data"; fillReportPickers(false); $("rCls").value=ui.cls; fillReportPickers(true); $("rJob").value=ui.job;
+  $("rType").value="data"; fillReportPickers(false); $("rCls").value=ui.cls||"__all"; fillReportPickers(true); $("rJob").value=ui.job||"__all";
   setView("man"); $("reports").scrollIntoView({behavior:"smooth",block:"start"});
 };
 
