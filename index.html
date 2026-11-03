@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Job Skills"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="theme-color" content="#1E6B62"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
-<script>window.APP_VERSION="1793672097";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
+<script>window.APP_VERSION="1793733865";if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){var hadSW=!!navigator.serviceWorker.controller, reloaded=false;navigator.serviceWorker.addEventListener("controllerchange",function(){ if(hadSW&&!reloaded){ reloaded=true; try{sessionStorage.setItem("jst.updated","1")}catch(e){} location.reload(); } });navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){ window.__swReg=r; r.update().catch(function(){}); setInterval(function(){ r.update().catch(function(){}); },30*60*1000); }).catch(function(){});document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&window.__swReg) window.__swReg.update().catch(function(){}); });}</script>
 <title>Job Skills Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
@@ -215,6 +215,8 @@ textarea.txt{height:auto; min-height:96px; padding:10px 12px; max-width:none; wi
 .pvbtns{display:flex; gap:8px} .pvbtns a{text-decoration:none}
 .pv iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:12px; background:#fff}
 .btn.dim{opacity:.55}
+.typetime{display:inline-flex; align-items:center; gap:6px; color:var(--mut); font-size:14px}
+.numin.sm{width:64px; height:40px; font-size:16px}
 .chip .ck{margin-right:4px}
 .chip.edj{display:inline-flex; align-items:center; gap:8px; padding-right:6px; border-style:dashed}
 .chip.edj .rmj{border:0; background:var(--pP); color:#fff; border-radius:999px; width:28px; height:28px; font-weight:800; display:grid; place-items:center}
@@ -1360,6 +1362,7 @@ function writeNote(e){
   if(e.time&&e.time.task) pf.push(`finished in ${mmss(e.time.task).replace(":"," min ")} sec`);
   if(e.time&&e.time.start) pf.push(`began ${e.time.start} seconds after the direction`);
   const rt=rateOf(e.rate); if(rt!==null) pf.push(`completed ${e.rate.items} items in ${e.rate.mins} minutes (${rt} per minute)`);
+  else if(e.rate&&e.rate.items!=null) pf.push(`completed ${plural(e.rate.items,"item")}`);
   if(b.ontask){ const a=b.ontask.on+b.ontask.off; if(a) pf.push(`was on task for ${Math.round(b.ontask.on/a*100)}% of observations`); }
   if(b.counts&&Object.keys(b.counts).length) pf.push(`displayed ${joinAnd(Object.entries(b.counts).map(([k,v])=>`${k.toLowerCase()} (${v}x)`))}`);
   if(e.errs&&Object.keys(e.errs).length) pf.push(`made ${joinAnd(Object.entries(e.errs).map(([k,v])=>`${v} "${k.toLowerCase()}" error${v>1?"s":""}`))}`);
@@ -1613,7 +1616,12 @@ function renderMore(){
   $("timeBox").innerHTML=[["task","Task time","How long the job took"],["lat","Time to start","From your direction to the student starting"]].map(([k,n,h])=>`
     <div class="sw"><span class="lbl2">${n}<br><small class="sub" style="font-weight:400">${h}</small></span><span class="clock" id="clk_${k}">${mmss(swSecs(F.tm[k]))}</span>
       <button type="button" class="btn sm${F.tm[k].st?" ghost":""}" data-sw="${k}">${F.tm[k].st?"Pause":swSecs(F.tm[k])?"Resume":"Start"}</button>
-      <button type="button" class="link" data-swr="${k}">Reset</button></div>`).join("");
+      <button type="button" class="link" data-swr="${k}">Reset</button>
+      <span class="typetime"><span>or type it:</span>
+        <input class="numin sm" id="tm_${k}_m" inputmode="numeric" placeholder="min" aria-label="${n} minutes" value="${swSecs(F.tm[k])&&!F.tm[k].st?Math.floor(Math.round(swSecs(F.tm[k]))/60):""}">
+        <span>:</span>
+        <input class="numin sm" id="tm_${k}_s" inputmode="numeric" placeholder="sec" aria-label="${n} seconds" value="${swSecs(F.tm[k])&&!F.tm[k].st?Math.round(swSecs(F.tm[k]))%60:""}"></span></div>`).join("")
+    +`<p class="sub" style="font-size:13px;margin:0">Use the stopwatch, or type the time if you timed it another way. You can leave either one blank.</p>`;
   $("errBox").innerHTML=`<h4>Tap each time it happens</h4>${counterGrid(errList(),F.errs,"e",F.editErr)}`;
   const rt=rateOf({items:+F.items,mins:+F.mins});
   $("rateBox").innerHTML=`<div class="fields">
@@ -1629,6 +1637,17 @@ function renderMore(){
   $("otEvery").addEventListener("change",ev=>{ ui.otEvery=+ev.target.value; remember(); F.otNext=ui.otEvery?Date.now()+ui.otEvery*60000:null; F.otDue=false; renderMore(); });
   const num=(id,key)=>$(id).addEventListener("input",ev=>{ F[key]=ev.target.value.replace(/[^\d.]/g,""); const r=rateOf({items:+F.items,mins:+F.mins}); $("rateOut").textContent=r!==null?r+" per minute":""; moreSummaries(); updSave(); });
   num("fItems","items"); num("fMins","mins"); num("fWork","workMin");
+  for(const k of ["task","lat"]){
+    const typed=()=>{
+      const mEl=$("tm_"+k+"_m"), sEl=$("tm_"+k+"_s");
+      const m=parseInt(mEl.value.replace(/\D/g,""))||0, sec=parseInt(sEl.value.replace(/\D/g,""))||0;
+      F.tm[k]={acc:m*60+sec, st:null};
+      const clk=$("clk_"+k); if(clk) clk.textContent=mmss(F.tm[k].acc);
+      const btn=document.querySelector(`button[data-sw="${k}"]`); if(btn){ btn.textContent=F.tm[k].acc?"Resume":"Start"; btn.classList.remove("ghost"); }
+      moreSummaries(); updSave();
+    };
+    $("tm_"+k+"_m").addEventListener("input",typed); $("tm_"+k+"_s").addEventListener("input",typed);
+  }
   $("fBrk").addEventListener("input",ev=>{ F.brk=Math.max(0,parseInt(ev.target.value)||0); moreSummaries(); updSave(); });
   document.querySelectorAll("details.more").forEach(dt=>{ dt.open=ui.openSecs.includes(dt.dataset.sec); });
   moreSummaries();
@@ -1640,7 +1659,7 @@ function moreSummaries(){
   $("sumTime").textContent=[ts?`task ${mmss(ts)}`:"", ls?`start ${mmss(ls)}`:"", (F.tm.task.st||F.tm.lat.st)?"running":""].filter(Boolean).join(" · ");
   const et=Object.values(nz(F.errs)).reduce((a,c)=>a+c,0); $("sumErr").textContent=et?`${et} error${et>1?"s":""}`:"";
   const r=rateOf({items:+F.items,mins:+F.mins});
-  $("sumRate").textContent=[r!==null?`${r}/min`:"", F.brk?`${F.brk} break${F.brk>1?"s":""}`:""].filter(Boolean).join(" · ");
+  $("sumRate").textContent=[r!==null?`${r}/min`:(F.items!==""?`${F.items} item${+F.items===1?"":"s"}`:""), F.brk?`${F.brk} break${F.brk>1?"s":""}`:""].filter(Boolean).join(" · ");
   $("sumSet").textContent=F.setting||"";
 }
 function extrasAny(){
@@ -1678,7 +1697,10 @@ function extraLines(e,short){
   if(st&&st.some(x=>x.p)){ const ind=st.filter(x=>x.p==="I").length; L.push(`Steps on their own: ${ind} of ${st.length}`);
     if(!short) L.push("Step prompts: "+st.map((x,i)=>`${i+1}. ${x.n} ${x.p==="X"?"not done":x.p||"-"}`).join("; ")); }
   if(e.errs&&Object.keys(e.errs).length) L.push("Errors: "+listTxt(e.errs));
-  if(e.rate){ const r=rateOf(e.rate); L.push(`${e.rate.items??"?"} items in ${e.rate.mins??"?"} min`+(r!==null?` (${r}/min)`:"")); }
+  if(e.rate){ const r=rateOf(e.rate), it=e.rate.items, mn=e.rate.mins;
+    if(it!=null&&mn!=null) L.push(`${it} items in ${mn} min`+(r!==null?` (${r}/min)`:""));
+    else if(it!=null) L.push(`${it} item${it===1?"":"s"} completed`);
+    else if(mn!=null) L.push(`Worked ${mn} min`); }
   if(e.breaks&&(e.breaks.n||e.breaks.workMin!=null)) L.push(`Breaks ${e.breaks.n||0}`+(e.breaks.workMin!=null?`, worked ${e.breaks.workMin} min before first break`:""));
   if(e.setting) L.push("Setting: "+e.setting);
   if(typeof e.pic==="boolean") L.push(e.pic?"Picture support used":"No picture support");
@@ -1696,6 +1718,8 @@ function habitsOf(es){
   const abcN=es.filter(e=>e.beh&&e.beh.abc).length; if(abcN) rows.push(["ABC notes",`${abcN} incident${abcN>1?"s":""} recorded (see session log)`]);
   const tt=es.map(e=>e.time&&e.time.task).filter(Boolean); if(tt.length) rows.push(["Task time",`${mmss(tt.reduce((a,b)=>a+b,0)/tt.length)} on average (fastest ${mmss(Math.min(...tt))})`]);
   const lt=es.map(e=>e.time&&e.time.start).filter(Boolean); if(lt.length) rows.push(["Time to start",`${mmss(lt.reduce((a,b)=>a+b,0)/lt.length)} on average`]);
+  const its=es.map(e=>e.rate&&e.rate.items).filter(v=>v!=null);
+  if(its.length){ const t=its.reduce((a,b)=>a+b,0); rows.push(["Items completed",`${t} total across ${its.length} session${its.length>1?"s":""} (${(t/its.length).toFixed(1)} per session)`]); }
   const rs=es.map(e=>rateOf(e.rate)).filter(v=>v!==null); if(rs.length) rows.push(["Work rate",`${(rs.reduce((a,b)=>a+b,0)/rs.length).toFixed(1)} items per minute on average`]);
   const bk=es.filter(e=>e.breaks); if(bk.length){ const nb=bk.reduce((a,e)=>a+(e.breaks.n||0),0), wm=bk.map(e=>e.breaks.workMin).filter(v=>v!=null);
     rows.push(["Breaks",`${(nb/bk.length).toFixed(1)} per session`+(wm.length?`; worked ${(wm.reduce((a,b)=>a+b,0)/wm.length).toFixed(1)} min before the first break on average`:"")]); }
